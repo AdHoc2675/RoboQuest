@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "RoboQuest/RoboQuestCharacter.h"
+#include "Enemy/EnemyBotBase.h"
 #include "Gatlingbot.generated.h"
 
 UCLASS()
-class ROBOQUEST_API AGatlingbot : public APawn
+class ROBOQUEST_API AGatlingbot : public AEnemyBotBase
 {
 	GENERATED_BODY()
 
