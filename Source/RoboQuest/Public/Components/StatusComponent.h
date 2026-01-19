@@ -21,6 +21,10 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	// Data table to use (assigned in editor)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status|Data")
+	class UEnemyStatDataTable* EnemyStatDataTable;
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -67,4 +71,13 @@ public:
 	// calculated as 1.0 + (CurrentLevel - 1) * DamageMultiplierPerLevel
 	UFUNCTION(BlueprintPure, Category = "Status")
 	float GetDamageMultiplier() const;
+
+	// --- Enemy Stat Initialization ---
+	// Initialization function: Set stats based on enemy ID (RowName) and level
+	UFUNCTION(BlueprintCallable, Category = "Status")
+	void InitializeEnemyStats(FName EnemyRowName, int32 NewLevel);
+
+	// Stat increase rate per level (e.g., 1.1 means 10% increase per level)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Config")
+	float LevelScalingFactor = 1.1f;
 };

@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Components/StatusComponent.h"
+#include "Data/EnemyStatRow.h"
+#include "Engine/DataTable.h"
 
 // Sets default values for this component's properties
 UStatusComponent::UStatusComponent()
@@ -24,7 +25,6 @@ void UStatusComponent::BeginPlay()
 	CurrentHealth = MaxHealth;
 	ScratchHealth = MaxHealth;
     
-	// UI 초기화 등을 위해 방송 <- write in english
 	// Broadcast for UI initialization, etc.
 	if (OnHealthChanged.IsBound())
 	{
@@ -119,3 +119,33 @@ float UStatusComponent::GetDamageMultiplier() const
 	return 1.0f + ((float)(CurrentLevel - 1) * DamageMultiplierPerLevel);
 }
 
+// --- Enemy Stat ---
+void UStatusComponent::InitializeEnemyStats(FName EnemyRowName, int32 NewLevel)
+{
+	if (!EnemyStatDataTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("EnemyStatDataTable is not assigned!"));
+		return;
+	}
+
+	// Find the row in the data table
+	FEnemyStatRow* EnemyStats = EnemyStatDataTable->FindRow<FEnemyStatRow>(EnemyRowName, TEXT(""));
+
+	if (EnemyStats)
+	{
+		CurrentLevel = NewLevel;
+
+		// Apply level scaling
+		float LevelScale = FMath::Pow(LevelScalingFactor, CurrentLevel - 1);
+
+		MaxHealth = EnemyStats->BaseHealth * LevelScale;
+		CurrentHealth = MaxHealth;
+		ScratchHealth = MaxHealth;
+
+		// You can also initialize other stats like damage, experience, etc.
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("EnemyStatRow not found for %s"), *EnemyRowName.ToString());
+	}
+}
