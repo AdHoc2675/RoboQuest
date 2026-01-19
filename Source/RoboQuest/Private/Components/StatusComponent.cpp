@@ -15,6 +15,9 @@ UStatusComponent::UStatusComponent()
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 	ScratchHealth = MaxHealth;
+	CurrentExp = 0.0f;
+	MaxExp = 100.0f;
+	CurrentLevel = 1;
 }
 
 // Called when the game starts
@@ -52,10 +55,10 @@ void UStatusComponent::TakeDamage(float DamageAmount)
 		return;
 	}
 
-	// 1. Actual health reduction (100% applied)
+	// Actual health reduction (100% applied)
 	CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.0f, MaxHealth);
 
-	// 2. Scratch Health reduction (reduced by factor, e.g., 50%)
+	// Scratch Health reduction (reduced by factor, e.g., 50%)
 	// Example: Damage 50 * 0.5 = 25 reduction. (100 -> 75)
 	float ScratchDamage = DamageAmount * ScratchDamageFactor;
 	ScratchHealth = FMath::Clamp(ScratchHealth - ScratchDamage, 0.0f, MaxHealth);
@@ -84,7 +87,7 @@ void UStatusComponent::Heal(float HealAmount)
 
 	float RemainingHeal = HealAmount;
 
-	// 1. Calculate the gap to Scratch Health
+	// Calculate the gap to Scratch Health
 	float GapToScratch = ScratchHealth - CurrentHealth;
 
 	if (GapToScratch > 0.0f)
@@ -95,7 +98,7 @@ void UStatusComponent::Heal(float HealAmount)
 		RemainingHeal -= AmountToHeal;
 	}
 
-	// 2. Healing beyond Scratch Health (with reduced efficiency)
+	// Healing beyond Scratch Health (with reduced efficiency)
 	if (RemainingHeal > 0.0f)
 	{
 		float EfficientHeal = RemainingHeal * OverhealEfficiency;
@@ -105,7 +108,7 @@ void UStatusComponent::Heal(float HealAmount)
 		ScratchHealth = CurrentHealth;
 	}
 
-	// 3. Clamp to not exceed MaxHealth
+	// Clamp to not exceed MaxHealth
 	if (CurrentHealth > MaxHealth)
 	{
 		CurrentHealth = MaxHealth;
