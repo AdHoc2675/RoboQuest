@@ -11,6 +11,25 @@ AEnemyBase::AEnemyBase()
 
 }
 
+bool AEnemyBase::IsAlive() const
+{
+	return true;
+}
+
+AActor* AEnemyBase::GetCurrentTarget() const
+{
+	return nullptr;
+}
+
+FVector AEnemyBase::GetAimOrigin() const
+{
+	return FVector();
+}
+
+void AEnemyBase::InitializeFromArchetype()
+{
+}
+
 // Called when the game starts or when spawned
 void AEnemyBase::BeginPlay()
 {
@@ -25,10 +44,4 @@ void AEnemyBase::Tick(float DeltaTime)
 
 }
 
-// Called to bind functionality to input
-void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
 
