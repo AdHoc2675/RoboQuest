@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BaseHealth = 100.0f;
 
-	// Base damage (if needed)
+	// Base damage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BaseDamage = 10.0f;
 
