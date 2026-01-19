@@ -8,6 +8,9 @@
 
 class ARoboQuestCharacter;
 
+// Delegate to notify when ammo changes
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, CurrentAmmo, int32, MaxAmmo);
+
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ROBOQUEST_API UTP_WeaponComponent : public USkeletalMeshComponent
 {
@@ -38,16 +41,56 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* FireAction;
 
+	// --- Ammo & Reload System ---
+
+	/** Maximum ammo capacity */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Ammo")
+	int32 MaxAmmo = 30;
+
+	/** Current ammo count */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Ammo")
+	int32 CurrentAmmo;
+
+	/** Time required to reload (seconds) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Ammo")
+	float ReloadTime = 1.5f;
+
+	/** Is the weapon currently reloading? */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Ammo")
+	bool bIsReloading = false;
+
+	/** Animation to play when reloading */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	UAnimMontage* ReloadAnimation;
+
+	/** Reload Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	class UInputAction* ReloadAction;
+
+	/** Delegate for ammo update events */
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnAmmoChanged OnAmmoChanged;
+
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
 
 	/** Attaches the actor to a FirstPersonCharacter */
-	UFUNCTION(BlueprintCallable, Category="Weapon")
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeapon(ARoboQuestCharacter* TargetCharacter);
 
 	/** Make the weapon Fire a Projectile */
-	UFUNCTION(BlueprintCallable, Category="Weapon")
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Fire();
+
+	/** Start the reload process */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void Reload();
+
+	/** Called when reload timer finishes */
+	void FinishReloading();
+
+	/** Check if weapon can currently fire */
+	bool CanFire() const;
 
 protected:
 	/** Ends gameplay for this component. */

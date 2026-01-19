@@ -12,12 +12,16 @@
 #include "Animation/AnimInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
+#include "TimerManager.h" 
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
 {
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
+	
+	// Initialize ammo
+	CurrentAmmo = MaxAmmo;
 }
 
 
@@ -26,6 +30,26 @@ void UTP_WeaponComponent::Fire()
 	if (Character == nullptr || Character->GetController() == nullptr)
 	{
 		return;
+	}
+
+	// Check eligibility to fire
+	if (!CanFire())
+	{
+		// Auto reload if out of ammo and not currently reloading
+		if (CurrentAmmo <= 0 && !bIsReloading)
+		{
+			Reload();
+		}
+		return;
+	}
+
+	// Consume ammo
+	CurrentAmmo--;
+	
+	// Notify ammo change
+	if (OnAmmoChanged.IsBound())
+	{
+		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
 	// Try and fire a projectile
@@ -94,9 +118,21 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
-			// Fire
+			// Bind Fire Action
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Fire);
+
+			// Bind Reload Action
+			if (ReloadAction)
+			{
+				EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Reload);
+			}
 		}
+	}
+
+	// Broadcast initial ammo state
+	if (OnAmmoChanged.IsBound())
+	{
+		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
 	return true;
@@ -115,5 +151,51 @@ void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			Subsystem->RemoveMappingContext(FireMappingContext);
 		}
+	}
+}
+
+bool UTP_WeaponComponent::CanFire() const
+{
+	// Can fire if character is valid, has ammo, and is not reloading
+	return (Character != nullptr) && (CurrentAmmo > 0) && (!bIsReloading);
+}
+
+void UTP_WeaponComponent::Reload()
+{
+	// Check conditions: Ignore if already reloading or ammo is full
+	if (bIsReloading || CurrentAmmo >= MaxAmmo)
+	{
+		return;
+	}
+
+	bIsReloading = true;
+
+	// Play reload animation
+	if (ReloadAnimation && Character)
+	{
+		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(ReloadAnimation);
+		}
+	}
+	
+	// Start timer to finish reloading
+	FTimerHandle ReloadTimerHandle;
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(ReloadTimerHandle, this, &UTP_WeaponComponent::FinishReloading, ReloadTime, false);
+	}
+}
+
+void UTP_WeaponComponent::FinishReloading()
+{
+	bIsReloading = false;
+	CurrentAmmo = MaxAmmo; // Refill ammo completely
+    
+	// Notify UI regarding full ammo
+	if (OnAmmoChanged.IsBound())
+	{
+		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 }
