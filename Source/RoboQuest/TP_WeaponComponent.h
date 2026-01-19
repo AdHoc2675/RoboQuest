@@ -70,17 +70,17 @@ public:
 	// --- Weapon Stats (From DataTable) ---
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float Damage = 10.0f;
+	float Damage = 15.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	int32 BulletCount = 1;
 
 	// Fire rate (Rounds Per Second)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float RateOfFire = 2.0f;
+	float RateOfFire = 3.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	int32 MaxAmmo = 30;
+	int32 MaxAmmo = 10;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float RangeMeter = 10.0f;

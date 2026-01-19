@@ -19,9 +19,7 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 {
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
-	
-	// Default Fallback values
-	MaxAmmo = 30;
+
 	CurrentAmmo = MaxAmmo;
 }
 
@@ -293,6 +291,8 @@ void UTP_WeaponComponent::Reload()
 	{
 		World->GetTimerManager().SetTimer(ReloadTimerHandle, this, &UTP_WeaponComponent::FinishReloading, ReloadTime, false);
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Reloading started..."));
 }
 
 void UTP_WeaponComponent::FinishReloading()
@@ -305,4 +305,6 @@ void UTP_WeaponComponent::FinishReloading()
 	{
 		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Reloading finished. Ammo refilled."));
 }
