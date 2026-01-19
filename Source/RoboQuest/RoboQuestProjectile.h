@@ -33,5 +33,18 @@ public:
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	// Projectile properties
+	void InitializeProjectile(float NewDamage, float NewRange, float NewCritMul);
+
+	// Damage dealt by this projectile
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	float Damage;
+	// Effective range in meters
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	float RangeMeter;
+	// Critical damage multiplier
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	float CritDamageMultiplier;
 };
 
