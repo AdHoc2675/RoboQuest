@@ -20,10 +20,52 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 	
-	// Initialize ammo
+	// Default Fallback values
+	MaxAmmo = 30;
 	CurrentAmmo = MaxAmmo;
 }
 
+void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
+{
+	// Ensure DataTable is valid
+	if (!WeaponDataTable)
+	{
+		// Fallback: If no table, just reset ammo
+		CurrentAmmo = MaxAmmo;
+		return;
+	}
+
+	static const FString ContextString(TEXT("Weapon Initialization"));
+	FWeaponStatRow* Row = WeaponDataTable->FindRow<FWeaponStatRow>(NewWeaponRowName, ContextString);
+
+	if (Row)
+	{
+		WeaponRowName = NewWeaponRowName;
+
+		// Apply Stats from DataTable
+		Damage = Row->Damage;
+		BulletCount = Row->BulletCount;
+		RateOfFire = Row->RateOfFire; // e.g., 5.0 (shots per sec)
+		MaxAmmo = Row->Capacity;
+		RangeMeter = Row->RangeMeter;
+		ReloadTime = Row->ReloadTime;
+		CritDamageMultiplier = Row->CritDamage;
+		
+		// Apply Enums
+		AmmoType = Row->AmmoType;
+		WeaponType = Row->WeaponType;
+
+		// Reset State
+		CurrentAmmo = MaxAmmo;
+		bIsReloading = false;
+
+		// Notify UI
+		if (OnAmmoChanged.IsBound())
+		{
+			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		}
+	}
+}
 
 void UTP_WeaponComponent::Fire()
 {
@@ -31,8 +73,15 @@ void UTP_WeaponComponent::Fire()
 	{
 		return;
 	}
+	double CurrentTime = GetWorld()->GetTimeSeconds();
+	float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
+	
+	if (CurrentTime - LastFireTime < FireDelay - 0.01f)
+	{
+		return; 
+	}
 
-	// Check eligibility to fire
+	// Check Ammo & Reload
 	if (!CanFire())
 	{
 		// Auto reload if out of ammo and not currently reloading
@@ -40,10 +89,13 @@ void UTP_WeaponComponent::Fire()
 		{
 			Reload();
 		}
+        // Stop timer if firing is not possible (e.g., out of ammo)
+        StopFire();
 		return;
 	}
 
-	// Consume ammo
+	// Mark Fire Time & Consume Ammo
+	LastFireTime = CurrentTime;
 	CurrentAmmo--;
 	
 	// Notify ammo change
@@ -52,26 +104,41 @@ void UTP_WeaponComponent::Fire()
 		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
-	// Try and fire a projectile
+	// Spawn Projectile(s)
 	if (ProjectileClass != nullptr)
 	{
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
 		{
 			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-	
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	
-			// Spawn the projectile at the muzzle
-			World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			
+			// We fire 'BulletCount' projectiles per shot
+			for(int32 i = 0; i < BulletCount; i++)
+			{
+				FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+				
+				// Optional: Add Spread here if BulletCount > 1
+				// if (BulletCount > 1) { SpawnRotation += RandomSpread... }
+
+				const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+		
+				// Set Spawn Collision Handling Override
+				FActorSpawnParameters ActorSpawnParams;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+		
+				// Spawn the projectile
+				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				
+				// Initialize projectile's properties
+				if (Projectile)
+				{
+					Projectile->InitializeProjectile(Damage, RangeMeter, CritDamageMultiplier);
+				}
+			}
 		}
 	}
 	
+	// Effects
 	// Try and play the sound if specified
 	if (FireSound != nullptr)
 	{
@@ -81,7 +148,6 @@ void UTP_WeaponComponent::Fire()
 	// Try and play a firing animation if specified
 	if (FireAnimation != nullptr)
 	{
-		// Get the animation object for the arms mesh
 		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
 		if (AnimInstance != nullptr)
 		{
@@ -112,14 +178,18 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
+			// Set the priority of the mapping to 1
 			Subsystem->AddMappingContext(FireMappingContext, 1);
 		}
 
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
-			// Bind Fire Action
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Fire);
+            // Changed Triggered -> Started & Completed
+            // When press started (Started) -> StartFire
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UTP_WeaponComponent::StartFire);
+            
+            // When released (Completed) -> StopFire
+            EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UTP_WeaponComponent::StopFire);
 
 			// Bind Reload Action
 			if (ReloadAction)
@@ -129,10 +199,18 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 		}
 	}
 
-	// Broadcast initial ammo state
-	if (OnAmmoChanged.IsBound())
+	// Initialize Stats on Attachment (Optional: could also be done on BeginPlay)
+	if(!WeaponRowName.IsNone())
 	{
-		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		InitializeWeapon(WeaponRowName);
+	}
+	else
+	{
+		// Fallback notify
+		if (OnAmmoChanged.IsBound())
+		{
+			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		}
 	}
 
 	return true;
@@ -160,8 +238,37 @@ bool UTP_WeaponComponent::CanFire() const
 	return (Character != nullptr) && (CurrentAmmo > 0) && (!bIsReloading);
 }
 
+void UTP_WeaponComponent::StartFire()
+{
+    double CurrentTime = GetWorld()->GetTimeSeconds();
+    float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
+
+    // Ignore if last fire was within FireDelay
+    if (CurrentTime - LastFireTime < FireDelay)
+    {
+        return; 
+    }
+
+    Fire();
+
+    // Set timer according to rate of fire (automatic fire) 
+    if (RateOfFire > 0.0f)
+    {
+        GetWorld()->GetTimerManager().SetTimer(AutomaticFireTimer, this, &UTP_WeaponComponent::Fire, FireDelay, true);
+    }
+}
+
+// Stop firing
+void UTP_WeaponComponent::StopFire()
+{
+    GetWorld()->GetTimerManager().ClearTimer(AutomaticFireTimer);
+}
+
 void UTP_WeaponComponent::Reload()
 {
+    // Stop firing when reload starts
+    StopFire();
+
 	// Check conditions: Ignore if already reloading or ammo is full
 	if (bIsReloading || CurrentAmmo >= MaxAmmo)
 	{

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Data/WeaponStatRow.h"
 #include "TP_WeaponComponent.generated.h"
 
 class ARoboQuestCharacter;
@@ -22,7 +23,7 @@ public:
 	TSubclassOf<class ARoboQuestProjectile> ProjectileClass;
 
 	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	USoundBase* FireSound;
 	
 	/** AnimMontage to play each time we fire */
@@ -30,7 +31,7 @@ public:
 	UAnimMontage* FireAnimation;
 
 	/** Gun muzzle's offset from the characters location */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	FVector MuzzleOffset;
 
 	/** MappingContext */
@@ -41,19 +42,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* FireAction;
 
-	// --- Ammo & Reload System ---
+	/** Timer handle for automatic fire */
+	FTimerHandle AutomaticFireTimer;
 
-	/** Maximum ammo capacity */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Ammo")
-	int32 MaxAmmo = 30;
+	// --- Ammo & Reload System ---
 
 	/** Current ammo count */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Ammo")
 	int32 CurrentAmmo;
-
-	/** Time required to reload (seconds) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Ammo")
-	float ReloadTime = 1.5f;
 
 	/** Is the weapon currently reloading? */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Ammo")
@@ -70,6 +66,50 @@ public:
 	/** Delegate for ammo update events */
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnAmmoChanged OnAmmoChanged;
+
+	// --- Weapon Stats (From DataTable) ---
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float Damage = 10.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	int32 BulletCount = 1;
+
+	// Fire rate (Rounds Per Second)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float RateOfFire = 2.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	int32 MaxAmmo = 30;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float RangeMeter = 10.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float ReloadTime = 1.5f;
+    
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float CritDamageMultiplier = 1.5f;
+
+	// Enum Stats
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	EAmmoType AmmoType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	EWeaponType WeaponType;
+
+	// --- Config ---
+
+	/** The DataTable used to initialize this weapon */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats|Data")
+	UDataTable* WeaponDataTable;
+
+	/** The Row Name to look up in the DataTable */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Data")
+	FName WeaponRowName;
+
+
+	// --- Functions ---
 
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
@@ -92,6 +132,18 @@ public:
 	/** Check if weapon can currently fire */
 	bool CanFire() const;
 
+	/** Initialize Weapon Stats from DataTable */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void InitializeWeapon(FName NewWeaponRowName);
+
+	/** Start automatic fire */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void StartFire();
+
+	/** Stop automatic fire */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void StopFire();
+
 protected:
 	/** Ends gameplay for this component. */
 	UFUNCTION()
@@ -100,4 +152,7 @@ protected:
 private:
 	/** The Character holding this weapon*/
 	ARoboQuestCharacter* Character;
+
+	/** Last time the weapon was fired (for RateOfFire calculation) */
+	double LastFireTime = 0.0;
 };
