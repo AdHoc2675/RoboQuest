@@ -136,11 +136,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void InitializeWeapon(FName NewWeaponRowName);
 
-	/** Start automatic fire */
+	/** Start automatic fire (Called by Input Started) */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StartFire();
 
-	/** Stop automatic fire */
+	/** Stop automatic fire (Called by Input Completed) */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StopFire();
 
@@ -149,10 +149,16 @@ protected:
 	UFUNCTION()
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+    /** Helper to stop the timer without clearing input state (Internal use) */
+    void StopAutomaticFire();
+
 private:
 	/** The Character holding this weapon*/
 	ARoboQuestCharacter* Character;
 
 	/** Last time the weapon was fired (for RateOfFire calculation) */
 	double LastFireTime = 0.0;
+    
+    /** Is the fire input button currently held? */
+    bool bFireInputHeld = false;
 };

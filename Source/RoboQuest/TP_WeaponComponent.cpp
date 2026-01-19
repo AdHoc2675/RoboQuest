@@ -19,8 +19,11 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 {
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
-
+	
+	// Default Fallback values
 	CurrentAmmo = MaxAmmo;
+    
+    bFireInputHeld = false;
 }
 
 void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
@@ -71,6 +74,8 @@ void UTP_WeaponComponent::Fire()
 	{
 		return;
 	}
+
+	// Check Rate of Fire (Cooldown)
 	double CurrentTime = GetWorld()->GetTimeSeconds();
 	float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
 	
@@ -87,8 +92,9 @@ void UTP_WeaponComponent::Fire()
 		{
 			Reload();
 		}
-        // Stop timer if firing is not possible (e.g., out of ammo)
-        StopFire();
+        
+        // [Modified] Just stop the timer loop, DO NOT reset bFireInputHeld
+        StopAutomaticFire();
 		return;
 	}
 
@@ -110,24 +116,17 @@ void UTP_WeaponComponent::Fire()
 		{
 			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
 			
-			// We fire 'BulletCount' projectiles per shot
 			for(int32 i = 0; i < BulletCount; i++)
 			{
 				FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-				
-				// Optional: Add Spread here if BulletCount > 1
-				// if (BulletCount > 1) { SpawnRotation += RandomSpread... }
-
 				const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
 		
-				// Set Spawn Collision Handling Override
 				FActorSpawnParameters ActorSpawnParams;
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		
-				// Spawn the projectile
+                // Spawn
 				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 				
-				// Initialize projectile's properties
 				if (Projectile)
 				{
 					Projectile->InitializeProjectile(Damage, RangeMeter, CritDamageMultiplier);
@@ -238,6 +237,9 @@ bool UTP_WeaponComponent::CanFire() const
 
 void UTP_WeaponComponent::StartFire()
 {
+    // [Added] Track input state
+    bFireInputHeld = true;
+
     double CurrentTime = GetWorld()->GetTimeSeconds();
     float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
 
@@ -256,16 +258,24 @@ void UTP_WeaponComponent::StartFire()
     }
 }
 
-// Stop firing
+// Input Released
 void UTP_WeaponComponent::StopFire()
+{
+    // [Added] User released the button
+    bFireInputHeld = false;
+    StopAutomaticFire();
+}
+
+// Internal Helper
+void UTP_WeaponComponent::StopAutomaticFire()
 {
     GetWorld()->GetTimerManager().ClearTimer(AutomaticFireTimer);
 }
 
 void UTP_WeaponComponent::Reload()
 {
-    // Stop firing when reload starts
-    StopFire();
+    // [Modified] Stop timer but keep 'bFireInputHeld' true if key is held
+    StopAutomaticFire();
 
 	// Check conditions: Ignore if already reloading or ammo is full
 	if (bIsReloading || CurrentAmmo >= MaxAmmo)
@@ -306,5 +316,9 @@ void UTP_WeaponComponent::FinishReloading()
 		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Reloading finished. Ammo refilled."));
+    // [Added] Resume Firing if button is still held
+    if (bFireInputHeld)
+    {
+        StartFire();
+    }
 }
