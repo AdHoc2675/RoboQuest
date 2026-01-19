@@ -25,10 +25,16 @@ void UStatusComponent::BeginPlay()
 	CurrentHealth = MaxHealth;
 	ScratchHealth = MaxHealth;
     
-	// Broadcast for UI initialization, etc.
+	// Initial Health broadcast
 	if (OnHealthChanged.IsBound())
 	{
 		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+	}
+
+	// Initial EXP broadcast
+	if (OnExpChanged.IsBound())
+	{
+		OnExpChanged.Broadcast(CurrentExp, MaxExp, CurrentLevel);
 	}
 }
 
@@ -117,6 +123,42 @@ float UStatusComponent::GetDamageMultiplier() const
 {
 	// Level 1 = 1.0, Level 2 = 1.1 ...
 	return 1.0f + ((float)(CurrentLevel - 1) * DamageMultiplierPerLevel);
+}
+
+void UStatusComponent::AddExp(float Amount)
+{
+	if (Amount <= 0.0f)
+	{
+		return;
+	}
+
+	CurrentExp += Amount;
+
+	// Check for level up
+	while (CurrentExp >= MaxExp)
+	{
+		CurrentExp -= MaxExp;
+		CurrentLevel++;
+
+		// Update MaxExp for next level
+		UpdateNextLevelExp();
+
+		// Broadcast level up event
+		if (OnLevelUp.IsBound())
+		{
+			OnLevelUp.Broadcast(CurrentLevel);
+		}
+	}
+	// Broadcast EXP change
+	if (OnExpChanged.IsBound())
+	{
+		OnExpChanged.Broadcast(CurrentExp, MaxExp, CurrentLevel);
+	}
+}
+
+void UStatusComponent::UpdateNextLevelExp()
+{
+	MaxExp = MaxExp * ExpIncreaseFactor;
 }
 
 // --- Enemy Stat ---

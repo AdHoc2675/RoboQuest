@@ -6,7 +6,12 @@
 #include "Components/ActorComponent.h"
 #include "StatusComponent.generated.h"
 
+// Health change event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHealthChanged, float, CurrentHealth, float, MaxHealth, float, DamageMultiplier);
+// Experience change event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnExpChanged, float, CurrentExp, float, NextLevelExp, int32, CurrentLevel);
+// Level up event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ROBOQUEST_API UStatusComponent : public UActorComponent
@@ -49,17 +54,35 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Config")
     float OverhealEfficiency = 0.1f;
 
-	// --- Leveling ---
+	// --- Leveling & EXP ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	int32 CurrentLevel = 1;
 
 	// Multiply = 1.0 + (Level - 1) * DamageMultiplierPerLevel
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float DamageMultiplierPerLevel = 0.1f;
+ 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status|Experience")
+	float CurrentExp = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Experience")
+	float MaxExp = 100.0f;
+
+	// Experience increase factor per level (e.g., 1.2 means 20% more EXP required each level)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Experience")
+	float ExpIncreaseFactor = 1.2f;
 
 	// --- Events ---
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChanged OnHealthChanged;
+
+	// Experience change event
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnExpChanged OnExpChanged;
+
+	// Level up event
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnLevelUp OnLevelUp;
 
 	// --- Functions ---
 	UFUNCTION(BlueprintCallable, Category = "Status")
@@ -71,6 +94,12 @@ public:
 	// calculated as 1.0 + (CurrentLevel - 1) * DamageMultiplierPerLevel
 	UFUNCTION(BlueprintPure, Category = "Status")
 	float GetDamageMultiplier() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Status")
+	void AddExp(float Amount);
+
+	// Update NextLevelExp based on CurrentLevel and ExpIncreaseFactor
+	void UpdateNextLevelExp();
 
 	// --- Enemy Stat Initialization ---
 	// Initialization function: Set stats based on enemy ID (RowName) and level
