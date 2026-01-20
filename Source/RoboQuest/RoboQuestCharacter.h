@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "Components/StatusComponent.h"
 #include "RoboQuestCharacter.generated.h"
 
 class UInputComponent;
@@ -36,9 +37,15 @@ class ARoboQuestCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	/** Status Component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status", meta = (AllowPrivateAccess = "true"))
+	UStatusComponent* StatusComponent;
 	
 public:
 	ARoboQuestCharacter();
+
+	UStatusComponent* GetStatusComponent() const { return StatusComponent; }
 
 protected:
 	virtual void BeginPlay();

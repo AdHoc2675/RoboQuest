@@ -26,17 +26,17 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	// Data table to use (assigned in editor)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status|Data")
-	class UEnemyStatDataTable* EnemyStatDataTable;
-
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// Data table to use (assigned in editor)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status|Data")
+	class UDataTable* EnemyStatDataTable;
+
 	// --- Health ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-	float MaxHealth = 100.0f;
+	float MaxHealth = 180.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float CurrentHealth;

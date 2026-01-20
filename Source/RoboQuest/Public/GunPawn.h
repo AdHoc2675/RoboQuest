@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Enemy/EnemyPawnBase.h"
 #include "GunPawn.generated.h"
 
 UCLASS()
-class ROBOQUEST_API AGunPawn : public APawn
+class ROBOQUEST_API AGunPawn : public AEnemyPawnBase
 {
 	GENERATED_BODY()
 

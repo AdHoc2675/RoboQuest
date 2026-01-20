@@ -30,6 +30,7 @@ void AGunPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	StatusComponent->InitializeEnemyStats("GunPawn", 1);
 }
 
 // Called every frame

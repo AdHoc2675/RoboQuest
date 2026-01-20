@@ -3,6 +3,7 @@
 #include "RoboQuestProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/StatusComponent.h"
 
 ARoboQuestProjectile::ARoboQuestProjectile() 
 {
@@ -46,6 +47,14 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 	if (CollisionComp)
 	{
 		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	UStatusComponent* TargetStatus = OtherActor->FindComponentByClass<UStatusComponent>();
+	if (TargetStatus)
+	{
+		TargetStatus->TakeDamage(Damage);
+
+		// show hit effect, show damage numbers, play sound, etc. here
 	}
 
 	SetActorHiddenInGame(true);

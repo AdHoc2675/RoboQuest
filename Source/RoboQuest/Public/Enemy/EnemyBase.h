@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/StatusComponent.h"
 #include "EnemyBase.generated.h"
 
 UCLASS()
@@ -44,8 +45,8 @@ protected:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
 	//UEnemyWeaponComponent* Weapon;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
-	//UEnemyStatusComponent* Status;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UStatusComponent* StatusComponent;
 
 	//// --- Data ---
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")

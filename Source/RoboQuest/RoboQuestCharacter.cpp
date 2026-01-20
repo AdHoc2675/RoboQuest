@@ -36,6 +36,7 @@ ARoboQuestCharacter::ARoboQuestCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 }
 
 void ARoboQuestCharacter::BeginPlay()
