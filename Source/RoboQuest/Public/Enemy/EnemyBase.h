@@ -17,18 +17,6 @@ public:
 	// Sets default values for this pawn's properties
 	AEnemyBase();
 
-	UFUNCTION(BlueprintCallable)
-	bool IsAlive() const;
-
-	UFUNCTION(BlueprintCallable)
-	AActor* GetCurrentTarget() const;
-
-	UFUNCTION(BlueprintCallable)
-	virtual FVector GetAimOrigin() const;
-
-	UFUNCTION(BlueprintCallable)
-	void InitializeFromArchetype();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -52,8 +40,18 @@ protected:
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
 	//UEnemyArchetypeDataAsset* Archetype;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	bool bIsDead = false;
 
+public:	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void Die();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsAlive() const { return !bIsDead; }
+
+protected:
+	// bind to health changed event
+	UFUNCTION()
+	void OnHealthChanged(float CurrentHealth, float ScratchHealth, float MaxHealth);
 };

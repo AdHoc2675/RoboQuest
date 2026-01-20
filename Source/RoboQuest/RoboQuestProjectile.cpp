@@ -4,6 +4,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StatusComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ARoboQuestProjectile::ARoboQuestProjectile() 
 {
@@ -34,37 +35,19 @@ ARoboQuestProjectile::ARoboQuestProjectile()
 
 void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor == nullptr || OtherActor == this)
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != GetOwner()))
 	{
-		return;
+		// Do not directly modify the variables of the other actor (e.g., HP). Use the engine's standard functions instead.
+		UGameplayStatics::ApplyDamage(
+			OtherActor,                     // The actor being hit
+			Damage,                         // Amount of damage
+			GetInstigatorController(),      // Controller of the instigator (used for kill logs, etc.)
+			this,                           // The damage causer (the projectile itself)
+			UDamageType::StaticClass()      // Damage type (change to fire, explosion, etc. if needed)
+		);
+
+		Destroy();
 	}
-
-	if ((OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
-	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-	}
-
-	if (CollisionComp)
-	{
-		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-
-	UStatusComponent* TargetStatus = OtherActor->FindComponentByClass<UStatusComponent>();
-	if (TargetStatus)
-	{
-		TargetStatus->TakeDamage(Damage);
-
-		// show hit effect, show damage numbers, play sound, etc. here
-	}
-
-	SetActorHiddenInGame(true);
-
-	if (ProjectileMovement)
-	{
-		ProjectileMovement->StopMovementImmediately();
-	}
-
-	SetLifeSpan(0.1f);
 }
 
 void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange, float NewCritMul)

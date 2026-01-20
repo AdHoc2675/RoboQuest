@@ -7,7 +7,7 @@
 #include "EnemyBotBase.generated.h"
 
 /**
- * AEnemyBotBase is bot/turret type that don't move around
+ * AEnemyBotBase is only able to move in x,y plane (like a wheeled robot)
  */
 UCLASS()
 class ROBOQUEST_API AEnemyBotBase : public AEnemyBase

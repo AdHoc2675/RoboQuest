@@ -109,4 +109,8 @@ public:
 	// Stat increase rate per level (e.g., 1.1 means 10% increase per level)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Config")
 	float LevelScalingFactor = 1.1f;
+
+	// Experience reward given to player upon this enemy's defeat
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Experience")
+	float ExpReward = 10.0f;
 };
