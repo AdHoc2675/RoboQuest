@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Enemy/EnemyFlyBase.h"
 #include "LightFly.generated.h"
 
 UCLASS()
-class ROBOQUEST_API ALightFly : public APawn
+class ROBOQUEST_API ALightFly : public AEnemyFlyBase
 {
 	GENERATED_BODY()
 

@@ -35,3 +35,38 @@ void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, flo
             FText::AsNumber(FMath::CeilToInt(MaxHP))));
     }
 }
+
+void UBaseUserHUDWidget::UpdateAmmoState(int32 CurrentAmmo, int32 MaxAmmo)
+{
+    if (CurrentBulletText)
+    {
+        CurrentBulletText->SetText(FText::AsNumber(CurrentAmmo));
+    }
+
+    if (MaxBulletText)
+    {
+        MaxBulletText->SetText(FText::AsNumber(MaxAmmo));
+    }
+}
+
+void UBaseUserHUDWidget::UpdateExpState(float CurrentExp, float MaxExp, int32 CurrentLevel)
+{
+    if (MaxExp <= 0.0f)
+    {
+        MaxExp = 1.0f;
+    }
+
+    // calculate exp ratio (0.0 ~ 1.0)
+    float ExpPercent = FMath::Clamp(CurrentExp / MaxExp, 0.0f, 1.0f);
+    // update UI elements
+    if (EXPBar)
+    {
+        EXPBar->SetPercent(ExpPercent);
+    }
+
+    if (LevelText)
+    {
+        // Lv: X
+        LevelText->SetText(FText::Format(NSLOCTEXT("HUD", "LevelFormat", "Lv {0}"), FText::AsNumber(CurrentLevel)));
+	}
+}

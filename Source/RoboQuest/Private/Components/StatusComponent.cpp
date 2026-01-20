@@ -12,12 +12,8 @@ UStatusComponent::UStatusComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// Default initialization
-	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 	ScratchHealth = MaxHealth;
-	CurrentExp = 0.0f;
-	MaxExp = 100.0f;
-	CurrentLevel = 1;
 }
 
 // Called when the game starts
@@ -31,7 +27,7 @@ void UStatusComponent::BeginPlay()
 	// Initial Health broadcast
 	if (OnHealthChanged.IsBound())
 	{
-		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
 
 	// Initial EXP broadcast
@@ -72,9 +68,11 @@ void UStatusComponent::TakeDamage(float DamageAmount)
 	// Notify changes
 	if (OnHealthChanged.IsBound())
 	{
-		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
     
+	UE_LOG(LogTemp, Log, TEXT("UStatusComponent::Took Damage: %f, CurrentHealth: %f, ScratchHealth: %f"), DamageAmount, CurrentHealth, ScratchHealth);
+
 	// Additional logic for death handling, etc...
 }
 
@@ -118,7 +116,7 @@ void UStatusComponent::Heal(float HealAmount)
 	// Notify changes
 	if (OnHealthChanged.IsBound())
 	{
-		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
 }
 
