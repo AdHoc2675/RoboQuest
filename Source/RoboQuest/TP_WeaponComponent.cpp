@@ -170,6 +170,9 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 	// add the weapon as an instance component to the character
 	Character->AddInstanceComponent(this);
 
+	// Bind weapon to HUD
+	Character->BindWeaponToHUD(this);
+
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 	{

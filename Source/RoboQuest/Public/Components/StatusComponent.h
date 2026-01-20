@@ -7,7 +7,7 @@
 #include "StatusComponent.generated.h"
 
 // Health change event
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHealthChanged, float, CurrentHealth, float, MaxHealth, float, DamageMultiplier);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHealthChanged, float, CurrentHealth, float, ScratchHealth, float, MaxHealth);
 // Experience change event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnExpChanged, float, CurrentExp, float, NextLevelExp, int32, CurrentLevel);
 // Level up event

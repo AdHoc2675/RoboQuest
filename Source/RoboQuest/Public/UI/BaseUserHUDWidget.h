@@ -31,6 +31,9 @@ public:
 	UProgressBar* EXPBar;
 
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* LevelText;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CurrentBulletText;
 
 	UPROPERTY(meta = (BindWidget))
@@ -38,5 +41,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdateAmmoState(int32 CurrentAmmo, int32 MaxAmmo);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdateExpState(float CurrentExp, float MaxExp, int32 CurrentLevel);
 
 };

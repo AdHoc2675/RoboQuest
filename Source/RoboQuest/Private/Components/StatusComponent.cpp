@@ -27,7 +27,7 @@ void UStatusComponent::BeginPlay()
 	// Initial Health broadcast
 	if (OnHealthChanged.IsBound())
 	{
-		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
 
 	// Initial EXP broadcast
@@ -68,7 +68,7 @@ void UStatusComponent::TakeDamage(float DamageAmount)
 	// Notify changes
 	if (OnHealthChanged.IsBound())
 	{
-		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
     
 	UE_LOG(LogTemp, Log, TEXT("UStatusComponent::Took Damage: %f, CurrentHealth: %f, ScratchHealth: %f"), DamageAmount, CurrentHealth, ScratchHealth);
@@ -116,7 +116,7 @@ void UStatusComponent::Heal(float HealAmount)
 	// Notify changes
 	if (OnHealthChanged.IsBound())
 	{
-		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, GetDamageMultiplier());
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
 }
 

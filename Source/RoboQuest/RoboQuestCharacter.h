@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "Components/StatusComponent.h"
+#include "UI/BaseUserHUDWidget.h"
 #include "RoboQuestCharacter.generated.h"
 
 class UInputComponent;
@@ -22,6 +23,7 @@ class ARoboQuestCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+public:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh1P;
@@ -45,11 +47,16 @@ class ARoboQuestCharacter : public ACharacter
 public:
 	ARoboQuestCharacter();
 
-	UStatusComponent* GetStatusComponent() const { return StatusComponent; }
+
 
 protected:
 	virtual void BeginPlay();
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UBaseUserHUDWidget> HUDWidgetClass;
+
+	UPROPERTY()
+	UBaseUserHUDWidget* HUDWidget;
 public:
 		
 	/** Look Input Action */
@@ -73,6 +80,9 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
+	/** Returns StatusComponent subobject **/
+	UStatusComponent* GetStatusComponent() const { return StatusComponent; }
+	/** Binds the given weapon component to the HUD */
+	void BindWeaponToHUD(class UTP_WeaponComponent* WeaponComp);
 };
 

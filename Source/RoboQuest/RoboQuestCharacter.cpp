@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "RoboQuestCharacter.h"
+#include "TP_WeaponComponent.h"
 #include "RoboQuestProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -43,6 +44,31 @@ void ARoboQuestCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	// Create HUD Widget and bind to StatusComponent
+	if (HUDWidgetClass)
+	{
+		HUDWidget = CreateWidget<UBaseUserHUDWidget>(GetWorld(), HUDWidgetClass);
+		if (HUDWidget)
+		{
+			HUDWidget->AddToViewport();
+
+			if (StatusComponent)
+			{
+				// connect health delegate
+				StatusComponent->OnHealthChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdateHealthState);
+
+				// force update initial state
+				HUDWidget->UpdateHealthState(StatusComponent->CurrentHealth, StatusComponent->ScratchHealth, StatusComponent->MaxHealth);
+
+				// connect exp delegate
+				StatusComponent->OnExpChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdateExpState);
+
+				// force update initial state
+				HUDWidget->UpdateExpState(StatusComponent->CurrentExp, StatusComponent->MaxExp, StatusComponent->CurrentLevel);
+			}
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -92,5 +118,19 @@ void ARoboQuestCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
+{
+	if (HUDWidget && WeaponComp)
+	{
+		// if already bound, may need to unbind first (on weapon swap)
+
+		// connect ammo delegate
+		WeaponComp->OnAmmoChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdateAmmoState);
+
+		// force update UI immediately upon weapon equip
+		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->MaxAmmo);
 	}
 }
