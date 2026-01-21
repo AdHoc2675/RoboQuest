@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "LightFly.h"
+#include "Enemy/Fly/LightFly.h"
 
 // Sets default values
 ALightFly::ALightFly()
