@@ -2,27 +2,25 @@
 
 
 #include "GunPawn.h"
+#include "Components/StatusComponent.h"
 
 // Sets default values
 AGunPawn::AGunPawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-	// Create SkeletalMeshComponent and attach to root
-	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GatlingMesh"));
-	SetRootComponent(SkeletalMeshComponent);
-
+    
+    // Find the Skeletal Mesh Asset
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshAsset(TEXT("/Game/RoboQuestAsset/GunPawn/GunPawn.GunPawn"));
 
 	if (MeshAsset.Succeeded())
 	{
-		SkeletalMeshComponent->SetSkeletalMesh(MeshAsset.Object);
+		// Use the inherited Mesh component from ACharacter
+		GetMesh()->SetSkeletalMesh(MeshAsset.Object);
 	}
 
-	// Set relative location and rotation
-	SkeletalMeshComponent->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, -90.0f, 0.0f));
-
+	// Set relative location and rotation of the inherited Mesh
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f)); // Adjusted Z to -90 to align with Capsule typically
 }
 
 // Called when the game starts or when spawned
@@ -30,7 +28,15 @@ void AGunPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	StatusComponent->InitializeEnemyStats("GunPawn", 1);
+    // StatusComponent is initialized in AEnemyBase constructor
+	if (StatusComponent)
+	{
+		StatusComponent->InitializeEnemyStats("GunPawn", 1);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGunPawn::BeginPlay() - StatusComponent is NULL!"));
+	}
 }
 
 // Called every frame

@@ -16,9 +16,6 @@ public:
 	// Sets default values for this pawn's properties
 	AGunPawn();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USkeletalMeshComponent* SkeletalMeshComponent;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
