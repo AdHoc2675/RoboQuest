@@ -48,7 +48,7 @@ public:
 
 	// Socket name to spawn projectile from
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	FName MuzzleSocketName = TEXT("Muzzle_01"); // Adjust based on mesh
+	FName MuzzleSocketName = TEXT("Head"); // Adjust based on mesh
 
 	// --- Animations (Montages) ---
 
@@ -68,15 +68,28 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float HitDamageThreshold = 10.0f;
 
-protected:
-	// Timer handle for automatic fire loop (periodical)
-	FTimerHandle FireLoopTimerHandle;
+	// --- AI & Movement ---
+	// Radius/Scale for random hover movement
+	UPROPERTY(EditAnywhere, Category = "AI|Movement")
+	float HoverMoveScale = 0.25f;
 
-	// Timer handle for the delay between PreShoot and Shoot
+	// How often to change hover direction (Seconds)
+	UPROPERTY(EditAnywhere, Category = "AI|Movement")
+	float HoverChangeInterval = 3.0f;
+
+protected:
+	// Timer for attack loop
+	FTimerHandle FireLoopTimerHandle;
+	// Timer for sequence: PreShoot -> Shoot
 	FTimerHandle AttackSequenceTimerHandle;
+	// Timer to pick new random hover direction
+	FTimerHandle HoverTimerHandle; 
 
 	// Track if we are currently in an attack sequence to avoid overlapping
 	bool bIsAttacking = false;
+
+	// Current direction vector for strafing/hovering
+	FVector CurrentHoverDirection;
 
 	// 1. Check conditions and start the attack sequence
 	void TryFire();
@@ -89,4 +102,8 @@ protected:
 
 	// Interrupt attack and play stagger
 	void PlayHit();
+
+	// --- Movement Functions ---
+	// Calculates a new random direction for strafing
+	void PickNewHoverDirection();
 };
