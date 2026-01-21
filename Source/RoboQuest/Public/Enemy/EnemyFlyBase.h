@@ -13,5 +13,13 @@ UCLASS()
 class ROBOQUEST_API AEnemyFlyBase : public AEnemyBase
 {
 	GENERATED_BODY()
+
+public:
+	// Sets default values for this character's properties
+	AEnemyFlyBase();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 	
 };

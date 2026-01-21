@@ -9,6 +9,7 @@
 
 ASmallPod::ASmallPod()
 {
+	RotationSpeed = 7.5f;
 }
 
 void ASmallPod::BeginPlay()
