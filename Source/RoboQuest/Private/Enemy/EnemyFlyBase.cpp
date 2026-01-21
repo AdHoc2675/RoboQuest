@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/World.h"
 
 AEnemyFlyBase::AEnemyFlyBase()
 {
@@ -35,28 +36,53 @@ void AEnemyFlyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Ensure movement mode is set to Flying on start
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	}
+
+	// Start Hovering Logic
+	if (bEnableHovering)
+	{
+		PickNewHoverDirection();
+		GetWorld()->GetTimerManager().SetTimer(HoverTimerHandle, this, &AEnemyFlyBase::PickNewHoverDirection, HoverChangeInterval, true);
+	}
+}
+
+void AEnemyFlyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	GetWorld()->GetTimerManager().ClearTimer(HoverTimerHandle);
 }
 
 void AEnemyFlyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Stop logic if dead
 	if (!IsAlive()) return;
 
 	FindTarget();
 
-	// Logic: If we have a target and line of sight, face them.
-	// Note: In a full AI implementation, the AIController would handle movement and focus.
-	// This manual rotation ensures the enemy faces the player even if stationary or strafing.
-	if (HasValidTarget() && CanSeeTarget())
+	if (HasValidTarget())
 	{
-		RotateTowardsTarget(DeltaTime);
+		// 1. Look at Target
+		if (CanSeeTarget())
+		{
+			RotateTowardsTarget(DeltaTime);
+		}
+
+		// 2. Move (Hovering + Avoidance)
+		if (bEnableHovering)
+		{
+			// Get Avoidance Vector (Push away from walls/ground)
+			FVector Avoidance = CalculateObstacleAvoidance();
+			
+			// Combine Intent (Hover) + Safety (Avoidance)
+			// Avoidance has higher priority, so we simply add it.
+			FVector FinalDirection = (CurrentHoverDirection + Avoidance).GetSafeNormal();
+
+			AddMovementInput(FinalDirection, HoverMoveScale);
+		}
 	}
 }
 
@@ -124,5 +150,100 @@ bool AEnemyFlyBase::CanSeeTarget() const
 	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 0.1f);
 
 	return !bHit; // Returns true if no obstacles were hit
+}
+
+FVector AEnemyFlyBase::CalculateObstacleAvoidance()
+{
+	FVector AvoidanceVector = FVector::ZeroVector;
+	FVector ActorLocation = GetActorLocation();
+	FVector Velocity = GetVelocity();
+    
+    // Use ForwardVector if velocity is too small (e.g. starting move)
+    FVector MoveDir = Velocity.IsNearlyZero() ? GetActorForwardVector() : Velocity.GetSafeNormal();
+
+	// 1. Ground Avoidance (Maintain Height)
+	FHitResult GroundHit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+    // Check downwards
+	FVector DownEnd = ActorLocation - FVector(0, 0, MinFlightHeight * 1.5f);
+	bool bHitGround = GetWorld()->LineTraceSingleByChannel(GroundHit, ActorLocation, DownEnd, ECC_WorldStatic, Params);
+
+	if (bHitGround)
+	{
+		// Force proportional to how close we are to the ground
+        // If dist is 0 (touching ground), force is max. If dist is MinHeight, force is lower.
+		float DistToGround = GroundHit.Distance;
+        if (DistToGround < MinFlightHeight)
+        {
+            float PushRatio = 1.0f - (DistToGround / MinFlightHeight);
+            AvoidanceVector += FVector::UpVector * PushRatio * AvoidanceForceMultiplier;
+        }
+	}
+
+	// 2. Wall/Obstacle Avoidance
+	FHitResult WallHit;
+    // Sphere trace is better than line trace for volume checking
+    float SphereRadius = 50.0f; 
+	FVector ForwardStart = ActorLocation;
+	FVector ForwardEnd = ActorLocation + (MoveDir * ObstacleCheckRange);
+
+	bool bHitWall = GetWorld()->SweepSingleByChannel(
+        WallHit, 
+        ForwardStart, 
+        ForwardEnd, 
+        FQuat::Identity, 
+        ECC_WorldStatic, 
+        FCollisionShape::MakeSphere(SphereRadius), 
+        Params
+    );
+
+	if (bHitWall)
+	{
+		// Add force away from the wall (ImpactNormal)
+        // ImpactNormal is the vector pointing out from the wall surface
+		AvoidanceVector += WallHit.ImpactNormal * AvoidanceForceMultiplier;
+        
+        // Debug
+        // DrawDebugLine(GetWorld(), ActorLocation, WallHit.ImpactPoint, FColor::Red, false, 0.1f);
+	}
+
+	return AvoidanceVector;
+}
+
+void AEnemyFlyBase::PickNewHoverDirection()
+{
+	if (!IsAlive()) return;
+
+	FVector NewDir = FMath::VRand();
+	NewDir.Z *= 0.25f; // Flatten vertical movement
+
+	if (HasValidTarget())
+	{
+		FVector ToTarget = CurrentTarget->GetActorLocation() - GetActorLocation();
+		float Dist = ToTarget.Size();
+		FVector DirToTarget = ToTarget.GetSafeNormal();
+
+		if (Dist > PreferredMaxRange)
+		{
+			// Pull closer
+			NewDir = (NewDir * 0.5f + DirToTarget).GetSafeNormal();
+		}
+		else if (Dist < PreferredMinRange)
+		{
+			// Push away
+			NewDir = (NewDir * 0.5f - DirToTarget).GetSafeNormal();
+		}
+		else
+		{
+			// Orbit logic
+			FVector OrbitDir = FVector::CrossProduct(DirToTarget, FVector::UpVector);
+			if (FMath::RandBool()) OrbitDir *= -1.0f;
+			NewDir = (OrbitDir + NewDir * 0.5f).GetSafeNormal();
+		}
+	}
+
+	CurrentHoverDirection = NewDir;
 }
 

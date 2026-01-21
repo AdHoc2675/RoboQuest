@@ -9,6 +9,10 @@
 
 class ARoboQuestProjectile;
 
+/**
+ * ALightFly: Flying enemy that focuses on combat mechanics.
+ * Movement and hovering logic are handled by AEnemyFlyBase.
+ */
 UCLASS()
 class ROBOQUEST_API ALightFly : public AEnemyFlyBase
 {
@@ -68,28 +72,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float HitDamageThreshold = 10.0f;
 
-	// --- AI & Movement ---
-	// Radius/Scale for random hover movement
-	UPROPERTY(EditAnywhere, Category = "AI|Movement")
-	float HoverMoveScale = 0.25f;
-
-	// How often to change hover direction (Seconds)
-	UPROPERTY(EditAnywhere, Category = "AI|Movement")
-	float HoverChangeInterval = 3.0f;
-
 protected:
 	// Timer for attack loop
 	FTimerHandle FireLoopTimerHandle;
+	
 	// Timer for sequence: PreShoot -> Shoot
 	FTimerHandle AttackSequenceTimerHandle;
-	// Timer to pick new random hover direction
-	FTimerHandle HoverTimerHandle; 
 
 	// Track if we are currently in an attack sequence to avoid overlapping
 	bool bIsAttacking = false;
 
-	// Current direction vector for strafing/hovering
-	FVector CurrentHoverDirection;
+	// --- Combat Functions ---
 
 	// 1. Check conditions and start the attack sequence
 	void TryFire();
@@ -103,7 +96,5 @@ protected:
 	// Interrupt attack and play stagger
 	void PlayHit();
 
-	// --- Movement Functions ---
-	// Calculates a new random direction for strafing
-	void PickNewHoverDirection();
+	// Note: Hovering logic is inherited from AEnemyFlyBase (bEnableHovering, HoverMoveScale, etc.)
 };
