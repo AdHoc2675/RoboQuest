@@ -68,7 +68,10 @@ void AEnemyBase::Die()
 
 	// Disable collisions
     GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    GetMesh()->SetCollisionProfileName(TEXT("Ragdoll")); // È¤Àº NoCollision
+    GetMesh()->SetCollisionProfileName(TEXT("Ragdoll")); // NoCollision
+
+    GetMesh()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
 	// enable ragdoll physics
     GetMesh()->SetSimulatePhysics(true);
