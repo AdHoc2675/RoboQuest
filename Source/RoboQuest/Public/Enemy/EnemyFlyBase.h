@@ -41,7 +41,7 @@ public:
 
 	// Strength of the avoidance force
 	UPROPERTY(EditAnywhere, Category = "AI|Movement")
-	float AvoidanceForceMultiplier = 0.5f;
+	float AvoidanceForceMultiplier = 1.0f;
 
 	// --- Hover Movement Settings ---
 	// If true, the enemy will automatically move around the target
@@ -49,7 +49,7 @@ public:
 	bool bEnableHovering = true;
 
 	UPROPERTY(EditAnywhere, Category = "AI|Movement")
-	float HoverMoveScale = 1.0f;
+	float HoverMoveScale = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "AI|Movement")
 	float HoverChangeInterval = 3.0f;
