@@ -71,7 +71,7 @@ void UStatusComponent::TakeDamage(float DamageAmount)
 		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
     
-	UE_LOG(LogTemp, Log, TEXT("UStatusComponent::Took Damage: %f, CurrentHealth: %f, ScratchHealth: %f"), DamageAmount, CurrentHealth, ScratchHealth);
+	UE_LOG(LogTemp, Log, TEXT("UStatusComponent:: %s Took Damage: %f, CurrentHealth: %f, ScratchHealth: %f"), *GetOwner()->GetName(), DamageAmount, CurrentHealth, ScratchHealth);
 
 	// Additional logic for death handling, etc...
 }
@@ -186,6 +186,7 @@ void UStatusComponent::InitializeEnemyStats(FName EnemyRowName, int32 NewLevel)
 		ScratchHealth = MaxHealth;
 
 		// You can also initialize other stats like damage, experience, etc.
+		ExpReward = EnemyStats->ExpReward * LevelScale;
 	}
 	else
 	{
