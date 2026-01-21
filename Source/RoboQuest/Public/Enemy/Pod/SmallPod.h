@@ -8,7 +8,7 @@
 
 /**
  * ASmallPod: A concrete implementation of a stationary pod enemy.
- * Inherits rotation logic from AEnemyPodBase and adds shooting mechanics (Projectile).
+ * Inherits rotation logic from AEnemyPodBase and adds shooting mechanics (Projectile) with animation sequence.
  */
 UCLASS()
 class ROBOQUEST_API ASmallPod : public AEnemyPodBase
@@ -33,7 +33,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireRate = 3.0f;
 
-	// Base Damage for the projectile (Can be scaled by level later)
+	// Base Damage for the projectile
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float AttackDamage = 10.0f;
 
@@ -45,13 +45,47 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	FName MuzzleSocketName = TEXT("Canon_02");
 
-protected:
-	// Timer handle for automatic fire loop
-	FTimerHandle FireTimerHandle;
+	// --- Animations (Montages) ---
+	
+	// Animation played before shooting (e.g., charging or aiming)
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* PreShootMontage;
 
-	// Check conditions and attempt to fire
+	// Animation played when shooting (FireProjectile is called at the start of this)
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* ShootMontage;
+
+	// Animation played when stunned/staggered
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* HitMontage;
+
+	// Damage threshold to trigger stagger
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float HitDamageThreshold = 15.0f;
+
+public:
+	// Override TakeDamage to handle Stagger logic
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+protected:
+	// Timer handle for automatic fire loop (periodical)
+	FTimerHandle FireLoopTimerHandle;
+
+	// Timer handle for the delay between PreShoot and Shoot
+	FTimerHandle AttackSequenceTimerHandle;
+
+	// Track if we are currently in an attack sequence to avoid overlapping
+	bool bIsAttacking = false;
+
+	// 1. Check conditions and start the attack sequence
 	void TryFire();
+
+	// 2. Called after PreShoot finishes, plays Shoot animation and fires projectile
+	void PerformShoot();
 
 	// Spawn the actual projectile
 	void FireProjectile();
+
+	// Interrupt attack and play stagger
+	void PlayHit();
 };
