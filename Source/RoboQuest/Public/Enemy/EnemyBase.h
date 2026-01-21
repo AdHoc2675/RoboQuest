@@ -17,6 +17,9 @@ public:
 	// Sets default values for this pawn's properties
 	AEnemyBase();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UStatusComponent* StatusComponent;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -33,8 +36,7 @@ protected:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
 	//UEnemyWeaponComponent* Weapon;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStatusComponent* StatusComponent;
+
 
 	//// --- Data ---
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")

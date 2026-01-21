@@ -55,4 +55,10 @@ void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange,
 	Damage = NewDamage;
 	RangeMeter = NewRange;
 	CritDamageMultiplier = NewCritMul;
+
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->Velocity = GetActorForwardVector() * ProjectileMovement->InitialSpeed;
+	}
+
 }
