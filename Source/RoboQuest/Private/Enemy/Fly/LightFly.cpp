@@ -1,69 +1,79 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Enemy/Pod/SmallPod.h"
+#include "Enemy/Fly/LightFly.h"
 #include "../../../RoboQuestProjectile.h"
+#include "Components/StatusComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "Animation/AnimInstance.h"
 
-ASmallPod::ASmallPod()
+// Sets default values
+ALightFly::ALightFly()
 {
-	RotationSpeed = 7.5f;
+	PrimaryActorTick.bCanEverTick = true;
+	
+	// Set default rotation speed defined in AEnemyFlyBase
+	RotationSpeed = 8.0f; 
 }
 
-void ASmallPod::BeginPlay()
+// Called when the game starts or when spawned
+void ALightFly::BeginPlay()
 {
-	Super::BeginPlay();
+	Super::BeginPlay(); // Base class starts hovering automatically!
 
-	// Initialize stats from DataTable (RowName: "SmallPod", Level: 1)
 	if (StatusComponent)
 	{
-		StatusComponent->InitializeEnemyStats(TEXT("SmallPod"), 1);
+		StatusComponent->InitializeEnemyStats(TEXT("LightFly"), 1);
 	}
 
-	// Start the firing loop (Calls TryFire periodically)
-	GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &ASmallPod::TryFire, FireRate, true);
+	// Only manage Combat Loop here
+	GetWorld()->GetTimerManager().SetTimer(FireLoopTimerHandle, this, &ALightFly::TryFire, FireRate, true);
 }
 
-void ASmallPod::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void ALightFly::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-
-	// Clear all timers
+	
 	GetWorld()->GetTimerManager().ClearTimer(FireLoopTimerHandle);
 	GetWorld()->GetTimerManager().ClearTimer(AttackSequenceTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(HoverTimerHandle);
 }
 
-float ASmallPod::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+// Called every frame
+void ALightFly::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime); // Base class handles Movement/Rotation
+	
+	// No extra code needed here unless LightFly has special tick logic
+}
+
+float ALightFly::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	// If damage exceeds threshold and we are not already dead, trigger stagger
 	if (ActualDamage >= HitDamageThreshold && IsAlive())
 	{
 		PlayHit();
 	}
-
+	
 	return ActualDamage;
 }
 
-void ASmallPod::PlayHit()
+void ALightFly::PlayHit()
 {
 	if (HitMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
-		// Interrupt any ongoing attack sequence
 		GetWorld()->GetTimerManager().ClearTimer(AttackSequenceTimerHandle);
 		bIsAttacking = false;
-
-		// Play Stagger Montage
+		
 		GetMesh()->GetAnimInstance()->Montage_Play(HitMontage);
 	}
 }
 
-void ASmallPod::TryFire()
+void ALightFly::TryFire()
 {
-	// Conditions: Alive, Valid Target, Line of Sight, and Not already attacking
+	// Use parent helper functions: IsAlive(), HasValidTarget(), CanSeeTarget()
 	if (!IsAlive() || !HasValidTarget() || !CanSeeTarget() || bIsAttacking)
 	{
 		return;
@@ -71,18 +81,15 @@ void ASmallPod::TryFire()
 
 	bIsAttacking = true;
 
-	// Play PreShoot Animation
 	float PreShootDuration = 0.0f;
 	if (PreShootMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
 		PreShootDuration = GetMesh()->GetAnimInstance()->Montage_Play(PreShootMontage);
 	}
 
-	// Set Timer to trigger PerformShoot after PreShoot finishes
-	// If duration is 0 (no montage), fire immediately
 	if (PreShootDuration > 0.0f)
 	{
-		GetWorld()->GetTimerManager().SetTimer(AttackSequenceTimerHandle, this, &ASmallPod::PerformShoot, PreShootDuration, false);
+		GetWorld()->GetTimerManager().SetTimer(AttackSequenceTimerHandle, this, &ALightFly::PerformShoot, PreShootDuration, false);
 	}
 	else
 	{
@@ -90,53 +97,50 @@ void ASmallPod::TryFire()
 	}
 }
 
-void ASmallPod::PerformShoot()
+void ALightFly::PerformShoot()
 {
 	if (!IsAlive()) return;
 
-	// Play Shoot Animation
 	if (ShootMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(ShootMontage);
 	}
 
-	// Spawn Projectile (at the start of Shoot animation)
 	FireProjectile();
 
-	// Reset Attack State
-	// (Optional: You could also wait for ShootMontage to finish before resetting bIsAttacking)
+	// Reset state immediately or invoke via timer/animation notify if preferred
 	bIsAttacking = false;
 }
 
-void ASmallPod::FireProjectile()
+void ALightFly::FireProjectile()
 {
 	if (!ProjectileClass) return;
 
 	FVector SpawnLoc = GetActorLocation();
 	
-	// Use the Actor's rotation (guaranteed to face the target by EnemyPodBase)
-	FRotator SpawnRot = GetActorRotation(); 
+	// Fly enemies might invoke fire from a specific forward direction
+	FRotator SpawnRot = GetActorRotation();
 
 	if (GetMesh() && GetMesh()->DoesSocketExist(MuzzleSocketName))
 	{
-		SpawnLoc = GetMesh()->GetSocketLocation(MuzzleSocketName) + GetActorForwardVector() * 30.0f;
+		SpawnLoc = GetMesh()->GetSocketLocation(MuzzleSocketName) + GetActorForwardVector() * 20.0f; // Small offset
 	}
 	else
 	{
-		SpawnLoc += GetActorForwardVector() * 30.0f;
+		SpawnLoc += GetActorForwardVector() * 50.0f;
 	}
 
 	FActorSpawnParameters ActorSpawnParams;
 	ActorSpawnParams.Owner = this;
 	ActorSpawnParams.Instigator = GetInstigator();
-	
-	// Always spawn collision handling
 	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+	// Use DetectRange from parent class
 	ARoboQuestProjectile* Projectile = GetWorld()->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLoc, SpawnRot, ActorSpawnParams);
-	
+
 	if (Projectile)
 	{
 		Projectile->InitializeProjectile(AttackDamage, DetectRange, 1.0f);
 	}
 }
+
