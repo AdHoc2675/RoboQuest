@@ -87,7 +87,7 @@ bool AEnemyPodBase::CanSeeTarget() const
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
 	// Debug line
-	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 0.1f);
+	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false);
 
 	// If bHit is true, it means there is an obstacle (Wall) -> Not visible
 	// If bHit is false, the trace went through -> Visible

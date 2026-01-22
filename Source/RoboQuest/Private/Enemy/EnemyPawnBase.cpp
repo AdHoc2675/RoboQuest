@@ -16,7 +16,7 @@ AEnemyPawnBase::AEnemyPawnBase()
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->DefaultLandMovementMode = MOVE_Walking;
-		GetCharacterMovement()->MaxWalkSpeed = 400.f;
+		GetCharacterMovement()->MaxWalkSpeed = 200.f;
 	}
 
 	// By default we face the target (strafing style)
@@ -224,6 +224,8 @@ bool AEnemyPawnBase::CanSeeTarget() const
 	Params.AddIgnoredActor(CurrentTarget);
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+
+	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false);
 
 	return !bHit;
 }

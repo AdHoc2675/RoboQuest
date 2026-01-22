@@ -18,7 +18,7 @@ AEnemyFlyBase::AEnemyFlyBase()
 	GetCharacterMovement()->DefaultLandMovementMode = MOVE_Flying;
 	GetCharacterMovement()->AirControl = 1.0f;
 	GetCharacterMovement()->BrakingDecelerationFlying = 1000.f; // Deceleration when stopping
-	GetCharacterMovement()->MaxFlySpeed = 600.f; // Adjust speed as needed
+	GetCharacterMovement()->MaxFlySpeed = 250.f; // Adjust speed as needed
 
 	// Configure Navigation settings for flying (if using NavMesh with flying support or similar)
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = false;
@@ -147,7 +147,7 @@ bool AEnemyFlyBase::CanSeeTarget() const
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
 	// Debug line (Visible in Editor)
-	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 0.1f);
+	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false);
 
 	return !bHit; // Returns true if no obstacles were hit
 }
