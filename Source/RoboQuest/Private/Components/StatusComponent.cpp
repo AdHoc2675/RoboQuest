@@ -155,11 +155,22 @@ void UStatusComponent::AddExp(float Amount)
 	{
 		OnExpChanged.Broadcast(CurrentExp, MaxExp, CurrentLevel);
 	}
+
+	// Notify changes
+	if (OnHealthChanged.IsBound())
+	{
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
+	}
 }
 
 void UStatusComponent::UpdateNextLevelExp()
 {
 	MaxExp = MaxExp * ExpIncreaseFactor;
+	MaxHealth = MaxHealth + 40;
+	ScratchHealth = ScratchHealth + 40;
+	CurrentHealth = MaxHealth;
+
+
 }
 
 // --- Enemy Stat ---
