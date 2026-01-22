@@ -44,7 +44,7 @@ public:
 
 	// Socket name to spawn projectile from
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	FName MuzzleSocketName = TEXT("Muzzle_01");
+	FName MuzzleSocketName = TEXT("R_Canon_Scale_02");
 
 	// --- Animations (Montages) ---
 
