@@ -57,6 +57,9 @@ protected:
 
 	UPROPERTY()
 	UBaseUserHUDWidget* HUDWidget;
+
+	bool bIsDead = false;
+
 public:
 		
 	/** Look Input Action */
@@ -84,5 +87,9 @@ public:
 	UStatusComponent* GetStatusComponent() const { return StatusComponent; }
 	/** Binds the given weapon component to the HUD */
 	void BindWeaponToHUD(class UTP_WeaponComponent* WeaponComp);
+	/** Returns whether the character is alive */
+	bool IsAlive() const { return !bIsDead; }
+	/** Override TakeDamage to apply damage to StatusComponent */
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 };
 

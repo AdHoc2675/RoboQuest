@@ -134,3 +134,21 @@ void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
 		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->MaxAmmo);
 	}
 }
+
+float ARoboQuestCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	// apply damage to status component
+	if (StatusComponent && IsAlive())
+	{
+		StatusComponent->TakeDamage(ActualDamage);
+
+		// If there is an aggro system, set the DamageCauser as the target here
+
+		// can add additional reactions to health changes here (e.g., play hurt animations, sounds, etc.)
+	}
+
+	return ActualDamage;
+
+}

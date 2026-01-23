@@ -168,7 +168,7 @@ void UStatusComponent::UpdateNextLevelExp()
 	MaxExp = MaxExp * ExpIncreaseFactor;
 	MaxHealth = MaxHealth + 40;
 	ScratchHealth = ScratchHealth + 40;
-	CurrentHealth = MaxHealth;
+	CurrentHealth = CurrentHealth + 40;
 
 
 }
