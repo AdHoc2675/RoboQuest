@@ -73,22 +73,29 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
+
+	// Callback for when StatusComponent updates
+	UFUNCTION()
+	void OnStatsUpdated(float DefensePercent, float SpeedMultiplier);
 
 public:
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
 	/** Returns StatusComponent subobject **/
 	UStatusComponent* GetStatusComponent() const { return StatusComponent; }
+
 	/** Binds the given weapon component to the HUD */
 	void BindWeaponToHUD(class UTP_WeaponComponent* WeaponComp);
+
 	/** Returns whether the character is alive */
 	bool IsAlive() const { return !bIsDead; }
+
 	/** Override TakeDamage to apply damage to StatusComponent */
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 };

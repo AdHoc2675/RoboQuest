@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -66,6 +67,18 @@ void ARoboQuestCharacter::BeginPlay()
 
 				// force update initial state
 				HUDWidget->UpdateExpState(StatusComponent->CurrentExp, StatusComponent->MaxExp, StatusComponent->CurrentLevel);
+
+				// Connect stats delegate
+				StatusComponent->OnStatsChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdatePlayerStats);
+
+				// character physics update
+				StatusComponent->OnStatsChanged.AddDynamic(this, &ARoboQuestCharacter::OnStatsUpdated);
+
+				// Force update initial state
+				HUDWidget->UpdatePlayerStats(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
+
+				// Initial stats application
+				OnStatsUpdated(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
 			}
 		}
 	}
@@ -151,4 +164,14 @@ float ARoboQuestCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Da
 
 	return ActualDamage;
 
+}
+
+void ARoboQuestCharacter::OnStatsUpdated(float DefensePercent, float SpeedMultiplier)
+{
+	if (GetCharacterMovement())
+	{
+		// Base Speed is usually 600.0f (or whatever default you set)
+		const float BaseSpeed = 600.0f;
+		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * SpeedMultiplier;
+	}
 }

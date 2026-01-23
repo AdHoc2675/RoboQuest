@@ -70,3 +70,24 @@ void UBaseUserHUDWidget::UpdateExpState(float CurrentExp, float MaxExp, int32 Cu
         LevelText->SetText(FText::Format(NSLOCTEXT("HUD", "LevelFormat", "Lv {0}"), FText::AsNumber(CurrentLevel)));
 	}
 }
+
+void UBaseUserHUDWidget::UpdatePlayerStats(float DefensePercent, float SpeedMultiplier)
+{
+	if (ShieldText)
+	{
+		// Display as percentage. e.g., 0.15 -> "Def: 15%"
+        int32 DefInt = FMath::RoundToInt(DefensePercent * 100.0f);
+		ShieldText->SetText(FText::Format(NSLOCTEXT("HUD", "DefFormat", "Def: {0}%"), FText::AsNumber(DefInt)));
+	}
+
+	if (SpeedText)
+	{
+		// Display as percentage change. e.g., 1.2 -> "Spd: +20%", 1.0 -> "Spd: +0%"
+        int32 SpdInt = FMath::RoundToInt((SpeedMultiplier - 1.0f) * 100.0f);
+        
+        // Add '+' sign for positive changes
+        FString Sign = (SpdInt >= 0) ? TEXT("+") : TEXT(""); 
+        
+		SpeedText->SetText(FText::Format(NSLOCTEXT("HUD", "SpdFormat", "Spd: {0}{1}%"), FText::FromString(Sign), FText::AsNumber(SpdInt)));
+	}
+}
