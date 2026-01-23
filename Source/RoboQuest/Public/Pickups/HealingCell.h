@@ -36,7 +36,7 @@ protected:
 
 	// Flying speed towards the player
 	UPROPERTY(EditAnywhere, Category = "Healing")
-	float MagnetFlySpeed = 750.0f;
+	float MagnetFlySpeed = 1500.0f;
 
 	// Initial physics impulse force when spawned
 	UPROPERTY(EditAnywhere, Category = "Healing")
@@ -47,6 +47,7 @@ private:
 	bool bIsMagnetized = false;
 	// Prevent double consumption
 	bool bIsConsumed = false;
+
 	AActor* TargetPlayer = nullptr;
 
 	UFUNCTION()

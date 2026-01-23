@@ -15,14 +15,17 @@ AHealingCell::AHealingCell()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Collision Sphere (Trigger)
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
-	SphereComponent->InitSphereRadius(40.0f);
-	SphereComponent->SetCollisionProfileName(TEXT("Trigger"));
-	RootComponent = SphereComponent;
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	MeshComponent->SetCollisionProfileName(TEXT("PhysicsActor"));
+	MeshComponent->SetSimulatePhysics(true);
+	MeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // Don't trip the player
+	RootComponent = MeshComponent;
 
 	// Mesh (Physics Object)
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	MeshComponent->SetupAttachment(RootComponent);
+	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	SphereComponent->SetupAttachment(RootComponent);
+	SphereComponent->InitSphereRadius(40.0f);
+	SphereComponent->SetCollisionProfileName(TEXT("Trigger"));
 	
 	// Enable Physics for the "Pop" effect on spawn
 	MeshComponent->SetSimulatePhysics(true);
@@ -51,6 +54,9 @@ void AHealingCell::BeginPlay()
 void AHealingCell::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// If consumed, stop logic (just in case Destroy hasn't happened yet)
+	if (bIsConsumed) return;
 
 	// Find Player if not already found (optimization: cache usually done in BeginPlay, but player 0 is safe)
 	if (!TargetPlayer)
@@ -90,6 +96,9 @@ void AHealingCell::Tick(float DeltaTime)
 
 void AHealingCell::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	// Prevent double triggering
+	if (bIsConsumed) return;
+
 	// Only interact with Player Character
 	ARoboQuestCharacter* PlayerChar = Cast<ARoboQuestCharacter>(OtherActor);
 	if (PlayerChar)
@@ -97,6 +106,8 @@ void AHealingCell::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 		// Heal Logic
 		if (UStatusComponent* Status = PlayerChar->GetStatusComponent())
 		{
+			bIsConsumed = true;
+
 			Status->Heal(HealAmount);
 			
 			// Visual FX / Sound can be added here
