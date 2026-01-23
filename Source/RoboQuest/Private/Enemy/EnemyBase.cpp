@@ -59,6 +59,8 @@ void AEnemyBase::Die()
     
     bIsDead = true;
 
+    SpawnDrops();
+
 	// give exp to player
     ARoboQuestCharacter* PlayerCharacter = Cast<ARoboQuestCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
     if (PlayerCharacter && StatusComponent)
@@ -83,4 +85,22 @@ void AEnemyBase::Die()
     SetLifeSpan(5.0f); 
 }
 
+void AEnemyBase::SpawnDrops()
+{
+    if (!HealingCellClass) return;
 
+    for (int32 i = 0; i < DropCount; i++)
+    {
+        // Random Spawn Position around the enemy
+        FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 20.0f;
+        SpawnLoc.Z += 50.0f; // Drop from body height
+
+        FRotator SpawnRot = FMath::VRand().Rotation();
+
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+        Params.Owner = this;
+
+        GetWorld()->SpawnActor<AActor>(HealingCellClass, SpawnLoc, SpawnRot, Params);
+    }
+}

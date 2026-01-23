@@ -39,6 +39,12 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MaxBulletText;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShieldText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* SpeedText;
+
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP);
 
@@ -48,4 +54,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateExpState(float CurrentExp, float MaxExp, int32 CurrentLevel);
 
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdatePlayerStats(float Shield, float Speed);
 };

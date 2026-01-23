@@ -1,4 +1,5 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -12,6 +13,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHealthChanged, float, CurrentH
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnExpChanged, float, CurrentExp, float, NextLevelExp, int32, CurrentLevel);
 // Level up event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
+
+// Stats change event (Defense %, Speed Multiplier)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatsChanged, float, DefensePercent, float, SpeedMultiplier);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ROBOQUEST_API UStatusComponent : public UActorComponent
@@ -27,16 +31,13 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	// Data table to use (assigned in editor)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status|Data")
 	class UDataTable* EnemyStatDataTable;
 
 	// --- Health ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-	float MaxHealth = 180.0f;
+	float MaxHealth = 240.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float CurrentHealth;
@@ -84,6 +85,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnLevelUp OnLevelUp;
 
+	// Stats change event
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnStatsChanged OnStatsChanged;
+
 	// --- Functions ---
 	UFUNCTION(BlueprintCallable, Category = "Status")
 	void TakeDamage(float DamageAmount);
@@ -113,4 +118,34 @@ public:
 	// Experience reward given to player upon this enemy's defeat
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Experience")
 	float ExpReward = 10.0f;
+
+	// --- Stats ---
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Stats")
+	float CurrentSpeed = 600.0f; // Movement Speed Value
+
+    // Damage reduction percentage (0.0 = 0%, 0.6 = 60%)
+    // Max capped at 0.6 (60%)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Stats")
+	float DefenseMultiplier = 0.0f; 
+
+    // Movement Speed Multiplier (1.0 = 100% normal speed)
+    // e.g., 1.2 = +20% speed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Stats")
+	float SpeedMultiplier = 1.0f; 
+
+    // Constant for Max Defense (60%)
+    const float MAX_DEFENSE_LIMIT = 0.6f;
+
+	// Modify Defense (Add inputs, clamp to max)
+    UFUNCTION(BlueprintCallable, Category = "Status")
+    void AddDefense(float Amount);
+    
+    // Modify Speed (Add inputs)
+    UFUNCTION(BlueprintCallable, Category = "Status")
+    void AddSpeed(float Amount);
+
+	// Helper to broadcast stats
+	UFUNCTION(BlueprintCallable, Category = "Status")
+	void UpdateStatsState();
 };

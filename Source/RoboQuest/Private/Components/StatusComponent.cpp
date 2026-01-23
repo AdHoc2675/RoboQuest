@@ -35,45 +35,35 @@ void UStatusComponent::BeginPlay()
 	{
 		OnExpChanged.Broadcast(CurrentExp, MaxExp, CurrentLevel);
 	}
-}
 
-// Called every frame
-void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	// Initial Stats broadcast
+	UpdateStatsState();
 }
 
 void UStatusComponent::TakeDamage(float DamageAmount)
 {
-	if (DamageAmount <= 0.0f)
-	{
-		return;
-	}
+	if (DamageAmount <= 0.0f) return;
 
-	// Actual health reduction (100% applied)
-	CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.0f, MaxHealth);
+    // Apply Defense Reduction
+    // Effective Damage = Damage * (1.0 - DefenseMultiplier)
+    float EffectiveDamage = DamageAmount * (1.0f - FMath::Clamp(DefenseMultiplier, 0.0f, MAX_DEFENSE_LIMIT));
 
-	// Scratch Health reduction (reduced by factor, e.g., 50%)
-	// Example: Damage 50 * 0.5 = 25 reduction. (100 -> 75)
-	float ScratchDamage = DamageAmount * ScratchDamageFactor;
+	// Apply damage to HP
+	CurrentHealth = FMath::Clamp(CurrentHealth - EffectiveDamage, 0.0f, MaxHealth);
+    
+    // Scratch logic applies to EffectiveDamage
+	float ScratchDamage = EffectiveDamage * ScratchDamageFactor;
 	ScratchHealth = FMath::Clamp(ScratchHealth - ScratchDamage, 0.0f, MaxHealth);
     
-	// ScratchHealth cannot be lower than CurrentHealth (correction)
-	if (ScratchHealth < CurrentHealth)
-	{
-		ScratchHealth = CurrentHealth;
-	}
+	if (ScratchHealth < CurrentHealth) ScratchHealth = CurrentHealth;
 
-	// Notify changes
 	if (OnHealthChanged.IsBound())
 	{
 		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
 	}
     
-	UE_LOG(LogTemp, Log, TEXT("UStatusComponent:: %s Took Damage: %f, CurrentHealth: %f, ScratchHealth: %f"), *GetOwner()->GetName(), DamageAmount, CurrentHealth, ScratchHealth);
-
-	// Additional logic for death handling, etc...
+    // Log info
+	UE_LOG(LogTemp, Log, TEXT("UStatusComponent:: %s Took Damage: %.1f (Mitigated from %.1f), CurrentHealth: %f, ScratchHealth: %f"), *GetOwner()->GetName(), EffectiveDamage, DamageAmount, CurrentHealth, ScratchHealth);
 }
 
 void UStatusComponent::Heal(float HealAmount)
@@ -155,11 +145,22 @@ void UStatusComponent::AddExp(float Amount)
 	{
 		OnExpChanged.Broadcast(CurrentExp, MaxExp, CurrentLevel);
 	}
+
+	// Notify changes
+	if (OnHealthChanged.IsBound())
+	{
+		OnHealthChanged.Broadcast(CurrentHealth, ScratchHealth, MaxHealth);
+	}
 }
 
 void UStatusComponent::UpdateNextLevelExp()
 {
 	MaxExp = MaxExp * ExpIncreaseFactor;
+	MaxHealth = MaxHealth + 40;
+	ScratchHealth = ScratchHealth + 40;
+	CurrentHealth = CurrentHealth + 40;
+
+
 }
 
 // --- Enemy Stat ---
@@ -191,5 +192,31 @@ void UStatusComponent::InitializeEnemyStats(FName EnemyRowName, int32 NewLevel)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("EnemyStatRow not found for %s"), *EnemyRowName.ToString());
+	}
+}
+
+void UStatusComponent::AddDefense(float Amount)
+{
+    DefenseMultiplier += Amount;
+    // Clamp between 0.0 and 0.6 (60%)
+    DefenseMultiplier = FMath::Clamp(DefenseMultiplier, 0.0f, MAX_DEFENSE_LIMIT);
+    
+    UpdateStatsState();
+}
+
+void UStatusComponent::AddSpeed(float Amount)
+{
+    SpeedMultiplier += Amount;
+    // Minimal speed floor check? (e.g. 0.1)
+    if (SpeedMultiplier < 0.1f) SpeedMultiplier = 0.1f;
+
+    UpdateStatsState();
+}
+
+void UStatusComponent::UpdateStatsState()
+{
+	if (OnStatsChanged.IsBound())
+	{
+		OnStatsChanged.Broadcast(DefenseMultiplier, SpeedMultiplier);
 	}
 }

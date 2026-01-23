@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -66,6 +67,18 @@ void ARoboQuestCharacter::BeginPlay()
 
 				// force update initial state
 				HUDWidget->UpdateExpState(StatusComponent->CurrentExp, StatusComponent->MaxExp, StatusComponent->CurrentLevel);
+
+				// Connect stats delegate
+				StatusComponent->OnStatsChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdatePlayerStats);
+
+				// character physics update
+				StatusComponent->OnStatsChanged.AddDynamic(this, &ARoboQuestCharacter::OnStatsUpdated);
+
+				// Force update initial state
+				HUDWidget->UpdatePlayerStats(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
+
+				// Initial stats application
+				OnStatsUpdated(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
 			}
 		}
 	}
@@ -132,5 +145,33 @@ void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
 
 		// force update UI immediately upon weapon equip
 		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->MaxAmmo);
+	}
+}
+
+float ARoboQuestCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	// apply damage to status component
+	if (StatusComponent && IsAlive())
+	{
+		StatusComponent->TakeDamage(ActualDamage);
+
+		// If there is an aggro system, set the DamageCauser as the target here
+
+		// can add additional reactions to health changes here (e.g., play hurt animations, sounds, etc.)
+	}
+
+	return ActualDamage;
+
+}
+
+void ARoboQuestCharacter::OnStatsUpdated(float DefensePercent, float SpeedMultiplier)
+{
+	if (GetCharacterMovement())
+	{
+		// Base Speed is usually 600.0f (or whatever default you set)
+		const float BaseSpeed = 600.0f;
+		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * SpeedMultiplier;
 	}
 }

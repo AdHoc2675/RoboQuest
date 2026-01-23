@@ -8,6 +8,8 @@
 #include "Components/StatusComponent.h"
 #include "EnemyBase.generated.h"
 
+class AHealingCell;
+
 UCLASS()
 class ROBOQUEST_API AEnemyBase : public ACharacter
 {
@@ -36,13 +38,21 @@ protected:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
 	//UEnemyWeaponComponent* Weapon;
 
-
-
 	//// --- Data ---
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
 	//UEnemyArchetypeDataAsset* Archetype;
 
 	bool bIsDead = false;
+
+	// --- Drops ---
+	
+	// Class of the Healing Cell to drop
+	UPROPERTY(EditDefaultsOnly, Category = "Drops")
+	TSubclassOf<AActor> HealingCellClass; // Use TSubclassOf<AActor> or include HealingCell.h
+
+	// Number of cells to drop on death
+	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "Drops")
+	int32 DropCount = 3;
 
 public:	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -56,4 +66,7 @@ protected:
 	// bind to health changed event
 	UFUNCTION()
 	void OnHealthChanged(float CurrentHealth, float ScratchHealth, float MaxHealth);
+
+	// Spawns healing cells
+	virtual void SpawnDrops();
 };
