@@ -63,7 +63,7 @@ void UStatusComponent::TakeDamage(float DamageAmount)
 	}
     
     // Log info
-	UE_LOG(LogTemp, Log, TEXT("Damage: %.1f (Mitigated from %.1f), Def: %.0f%%"), EffectiveDamage, DamageAmount, DefenseMultiplier * 100.0f);
+	UE_LOG(LogTemp, Log, TEXT("UStatusComponent:: %s Took Damage: %.1f (Mitigated from %.1f), CurrentHealth: %f, ScratchHealth: %f"), *GetOwner()->GetName(), EffectiveDamage, DamageAmount, CurrentHealth, ScratchHealth);
 }
 
 void UStatusComponent::Heal(float HealAmount)
