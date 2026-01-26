@@ -43,11 +43,21 @@ public:
 	/** Status Component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status", meta = (AllowPrivateAccess = "true"))
 	UStatusComponent* StatusComponent;
+
+	/** Look Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LookAction;
 	
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* InteractAction;
+
+	// Max distance to check for interactable objects (e.g. 300 units)
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float InteractionRange = 300.0f;
+
 public:
 	ARoboQuestCharacter();
-
-
 
 protected:
 	virtual void BeginPlay();
@@ -59,12 +69,6 @@ protected:
 	UBaseUserHUDWidget* HUDWidget;
 
 	bool bIsDead = false;
-
-public:
-		
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
 
 protected:
 	/** Called for movement input */
@@ -79,6 +83,8 @@ protected:
 	// Callback for when StatusComponent updates
 	UFUNCTION()
 	void OnStatsUpdated(float DefensePercent, float SpeedMultiplier);
+
+	void Interact();
 
 public:
 	/** Returns Mesh1P subobject **/
