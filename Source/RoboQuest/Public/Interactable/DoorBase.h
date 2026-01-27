@@ -41,9 +41,6 @@ public:
     // Implementation of the Interact method from IInteractable
     virtual void Interact_Implementation(AActor* Interactor) override;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "Door")
-    void PlayOpenEffects();
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "Door")
-    void PlayCloseEffects();
+    // Helper to handle collision handling
+    void UpdateDoorState();
 };
