@@ -8,7 +8,7 @@
 #include "DoorBase.generated.h"
 
 class UBoxComponent;
-class UStaticMeshComponent;
+class USkeletalMeshComponent;
 
 UCLASS()
 class ROBOQUEST_API ADoorBase : public AActor, public IInteractable
@@ -19,12 +19,12 @@ public:
     ADoorBase();
 
 protected:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
     class USceneComponent* RootScene;
 
     // The door mesh itself (movable part)
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    UStaticMeshComponent* DoorMesh;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+    USkeletalMeshComponent* DoorMesh;
 
     // Simple timeline/animation support via Curve (Timeline is better in BP, but we can use simple interpolation or TimelineComponent in C++)
     // For simplicity with Animations mentioned:

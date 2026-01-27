@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Interactable/DoorBase.h"
-#include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 
 ADoorBase::ADoorBase()
@@ -11,7 +10,7 @@ ADoorBase::ADoorBase()
     RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
     SetRootComponent(RootScene);
 
-    DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
+    DoorMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("DoorMesh"));
     DoorMesh->SetupAttachment(RootScene);
 
     bIsOpen = false;
