@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "Interactable.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -100,6 +101,9 @@ void ARoboQuestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Look);
+
+		// Interact
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Interact);
 	}
 	else
 	{
@@ -131,6 +135,30 @@ void ARoboQuestCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ARoboQuestCharacter::Interact()
+{
+	FVector Start = GetFirstPersonCameraComponent()->GetComponentLocation();
+	FVector End = Start + (GetFirstPersonCameraComponent()->GetForwardVector() * InteractionRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	// Trace for objects in front of camera
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		if (AActor* HitActor = HitResult.GetActor())
+		{
+			// Check if actor implements IInteractable interface
+			if (HitActor->Implements<UInteractable>())
+			{
+				// Cast to interface and call Interact function
+				IInteractable::Execute_Interact(HitActor, this);
+			}
+		}
 	}
 }
 
