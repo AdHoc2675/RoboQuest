@@ -104,5 +104,7 @@ public:
 
 	/** Override TakeDamage to apply damage to StatusComponent */
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	UBaseUserHUDWidget* GetHUDWidget() const { return HUDWidget; }
 };
 

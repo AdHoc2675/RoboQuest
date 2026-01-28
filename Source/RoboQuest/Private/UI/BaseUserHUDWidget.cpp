@@ -2,6 +2,8 @@
 
 
 #include "UI/BaseUserHUDWidget.h"
+#include "Components/NamedSlot.h"
+
 
 void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP)
 {
@@ -90,4 +92,28 @@ void UBaseUserHUDWidget::UpdatePlayerStats(float DefensePercent, float SpeedMult
         
 		SpeedText->SetText(FText::Format(NSLOCTEXT("HUD", "SpdFormat", "Spd: {0}{1}%"), FText::FromString(Sign), FText::AsNumber(SpdInt)));
 	}
+}
+
+void UBaseUserHUDWidget::SetCrosshair(TSubclassOf<UCrosshairWidget> NewCrosshairClass)
+{
+	// if there is an existing crosshair, remove it first
+    if (CurrentCrosshairWidget)
+    {
+        CurrentCrosshairWidget->RemoveFromParent();
+        CurrentCrosshairWidget = nullptr;
+    }
+
+	// if no new class provided, just exit
+    if (!NewCrosshairClass) return;
+
+	// create new crosshair widget
+    CurrentCrosshairWidget = CreateWidget<UCrosshairWidget>(GetWorld(), NewCrosshairClass);
+}
+
+void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
+{
+    if (CurrentCrosshairWidget)
+    {
+        CurrentCrosshairWidget->UpdateSpread(Spread);
+    }
 }

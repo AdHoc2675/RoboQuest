@@ -57,6 +57,10 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		AmmoType = Row->AmmoType;
 		WeaponType = Row->WeaponType;
 
+		// Apply Accuracy & Recoil
+		AimVariance = Row->AimVariance;
+		CrosshairWidgetClass = Row->CrosshairClass;
+
 		// Reset State
 		CurrentAmmo = MaxAmmo;
 		bIsReloading = false;
@@ -65,6 +69,14 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		if (OnAmmoChanged.IsBound())
 		{
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		}
+
+		if (Character)
+		{
+			if (UBaseUserHUDWidget* HUD = Character->GetHUDWidget())
+			{
+				HUD->SetCrosshair(CrosshairWidgetClass);
+			}
 		}
 	}
 }

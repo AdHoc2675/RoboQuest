@@ -67,6 +67,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CritDamage = 1.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AimVariance = 0.5f;
+
 	// Ammo Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EAmmoType AmmoType = EAmmoType::Magazine;

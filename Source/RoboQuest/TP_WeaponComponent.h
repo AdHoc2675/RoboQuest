@@ -116,6 +116,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Data")
 	FName WeaponRowName;
 
+	/** Class of the crosshair widget from DataTable */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<class UCrosshairWidget> CrosshairWidgetClass;
 
 	// --- Functions ---
 

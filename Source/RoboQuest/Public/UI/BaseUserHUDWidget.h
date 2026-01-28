@@ -6,7 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
-
+#include "UI/CrosshairWidget.h"
 #include "BaseUserHUDWidget.generated.h"
 
 /**
@@ -45,6 +45,12 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SpeedText;
 
+	UPROPERTY(meta = (BindWidget))
+	class UNamedSlot* CrosshairSlot;
+
+	UPROPERTY()
+	UCrosshairWidget* CurrentCrosshairWidget;
+
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP);
 
@@ -56,4 +62,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdatePlayerStats(float Shield, float Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void SetCrosshair(TSubclassOf<UCrosshairWidget> NewCrosshairClass);
+
+	void UpdateCrosshairSpread(float Spread);
 };
