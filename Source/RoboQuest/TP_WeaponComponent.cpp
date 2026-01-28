@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h" // Required for VRandCone and Math functions
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Animation/AnimInstance.h"
@@ -70,12 +71,13 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 
 void UTP_WeaponComponent::Fire()
 {
+	// 1. Validation Check
 	if (Character == nullptr || Character->GetController() == nullptr)
 	{
 		return;
 	}
 
-	// Check Rate of Fire (Cooldown)
+	// 2. Cooldown Check (Rate of Fire)
 	double CurrentTime = GetWorld()->GetTimeSeconds();
 	float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
 	
@@ -84,7 +86,7 @@ void UTP_WeaponComponent::Fire()
 		return; 
 	}
 
-	// Check Ammo & Reload
+	// 3. Ammo & Reload Check
 	if (!CanFire())
 	{
 		// Auto reload if out of ammo and not currently reloading
@@ -93,57 +95,101 @@ void UTP_WeaponComponent::Fire()
 			Reload();
 		}
         
-        // [Modified] Just stop the timer loop, DO NOT reset bFireInputHeld
         StopAutomaticFire();
 		return;
 	}
 
-	// Mark Fire Time & Consume Ammo
+	// 4. Update Ammo
 	LastFireTime = CurrentTime;
 	CurrentAmmo--;
 	
-	// Notify ammo change
+	// Notify ammo change UI
 	if (OnAmmoChanged.IsBound())
 	{
 		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
-	// Spawn Projectile(s)
+	// 5. Fire Logic (Updated: Converging Aim + Spread + Recoil)
 	if (ProjectileClass != nullptr)
 	{
 		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+
+		if (World != nullptr && PlayerController != nullptr)
 		{
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			
+			// --- A. Converging Aim Logic (Find where the crosshair is pointing) ---
+			FVector CameraLoc;
+			FRotator CameraRot;
+			PlayerController->GetPlayerViewPoint(CameraLoc, CameraRot);
+
+			FVector TraceStart = CameraLoc;
+			FVector TraceEnd = CameraLoc + (CameraRot.Vector() * 10000.0f); // Trace 100m forward
+
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(GetOwner()); // Ignore self
+
+			// Perform Line Trace to find target point in center of screen
+			bool bHit = World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
+			FVector TargetLocation = bHit ? Hit.Location : TraceEnd;
+
+			// --- B. Determine Muzzle Location ---
+			FVector MuzzleLoc = GetOwner()->GetActorLocation();
+			if (DoesSocketExist(TEXT("Muzzle")))
+			{
+				MuzzleLoc = GetSocketLocation(TEXT("Muzzle"));
+			}
+			else
+			{
+				// Fallback to offset if no socket
+				MuzzleLoc = GetOwner()->GetActorLocation() + CameraRot.RotateVector(MuzzleOffset);
+			}
+
+			// --- C. Spawn Projectiles (Loop for Shotguns) ---
 			for(int32 i = 0; i < BulletCount; i++)
 			{
-				FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-				const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+				// Calculate direction from Muzzle to the Target Point
+				FVector DirectionToTarget = (TargetLocation - MuzzleLoc).GetSafeNormal();
+
+				// Apply Bullet Spread (AimVariance)
+				FVector SpreadDirection = FMath::VRandCone(DirectionToTarget, FMath::DegreesToRadians(AimVariance));
+				FRotator SpawnRotation = SpreadDirection.Rotation();
 		
 				FActorSpawnParameters ActorSpawnParams;
-				// Adjust collision handling to always spawn even if colliding with something
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		
-                // Spawn
-				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				ActorSpawnParams.Owner = Character;
+				ActorSpawnParams.Instigator = Character;
+
+                // Spawn Projectile
+				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, MuzzleLoc, SpawnRotation, ActorSpawnParams);
 				
 				if (Projectile)
 				{
 					Projectile->InitializeProjectile(Damage, RangeMeter, CritDamageMultiplier);
 				}
 			}
+
+			// --- D. Apply Recoil ---
+			if (RecoilStrength > 0.0f)
+			{
+				// Randomize recoil slightly for realism
+				float RecoilPitch = -RecoilStrength * FMath::RandRange(0.4f, 0.6f); // Kick up
+				float RecoilYaw = RecoilStrength * FMath::RandRange(-0.25f, 0.25f);   // Shake left/right
+
+				PlayerController->AddPitchInput(RecoilPitch);
+				PlayerController->AddYawInput(RecoilYaw);
+			}
 		}
 	}
 	
 	// Effects
-	// Try and play the sound if specified
+	// Play Sound
 	if (FireSound != nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
 	}
 	
-	// Try and play a firing animation if specified
+	// Play Animation
 	if (FireAnimation != nullptr)
 	{
 		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();

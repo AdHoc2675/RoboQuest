@@ -91,6 +91,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float CritDamageMultiplier = 1.5f;
 
+	/** Cone half-angle for variance while aiming */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float AimVariance = 0.5f;
+
+	/** Amount of firing recoil to apply to the owner */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilStrength = 0.5f;
+
 	// Enum Stats
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	EAmmoType AmmoType;

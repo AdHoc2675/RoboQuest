@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "UI/CrosshairWidget.h" 
 #include "WeaponStatRow.generated.h"
 
 /** 
@@ -73,6 +74,9 @@ public:
 	// Weapon Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType = EWeaponType::Assault;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UCrosshairWidget> CrosshairClass;
 };
 
 /**
