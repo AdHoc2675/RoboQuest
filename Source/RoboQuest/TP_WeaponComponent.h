@@ -116,6 +116,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Data")
 	FName WeaponRowName;
 
+	/** Current Spread Value (Angle in degrees) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Accuracy")
+	float CurrentSpread;
+
+	/** Minimum/Base Spread */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float MinSpread = 0.5f;
+
+	/** Maximum Spread */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float MaxSpread = 4.0f;
+
+	/** Spread added per shot */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float SpreadIncreasePerShot = 1.0f;
+
+	/** Spread recovery per second */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float SpreadRecoveryRate = 5.0f;
+
 	// --- Functions ---
 
 	/** Sets default values for this component's properties */
@@ -151,13 +171,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StopFire();
 
+public:
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 protected:
+	virtual void BeginPlay() override; // TickComponent 활성화를 위해 필요
+
 	/** Ends gameplay for this component. */
 	UFUNCTION()
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    /** Helper to stop the timer without clearing input state (Internal use) */
-    void StopAutomaticFire();
+	/** Helper to stop the timer without clearing input state (Internal use) */
+	void StopAutomaticFire();
 
 private:
 	/** The Character holding this weapon*/

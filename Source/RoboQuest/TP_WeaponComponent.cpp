@@ -18,6 +18,10 @@
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
 {
+	// Enable Tick needed for smooth crosshair recovery
+	PrimaryComponentTick.bCanEverTick = true; // Tick 활성화
+	PrimaryComponentTick.bStartWithTickEnabled = true;
+
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 	
@@ -26,6 +30,35 @@ UTP_WeaponComponent::UTP_WeaponComponent()
     
     bFireInputHeld = false;
 
+	CurrentSpread = MinSpread;
+}
+
+void UTP_WeaponComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	CurrentSpread = MinSpread;
+}
+
+// Tick 함수 구현
+void UTP_WeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// 1. 탄퍼짐 회복 (사격 중이 아닐 때 혹은 항상)
+	// 목표: MinSpread로 서서히 돌아감
+	if (CurrentSpread > MinSpread)
+	{
+		CurrentSpread = FMath::FInterpTo(CurrentSpread, MinSpread, DeltaTime, SpreadRecoveryRate);
+	}
+	
+	// 2. HUD 업데이트
+	if (Character)
+	{
+		if (UBaseUserHUDWidget* HUD = Character->GetHUDWidget())
+		{
+			HUD->UpdateCrosshairSpread(CurrentSpread);
+		}
+	}
 }
 
 void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
@@ -58,8 +91,11 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		AmmoType = Row->AmmoType;
 		WeaponType = Row->WeaponType;
 
-		// Apply Accuracy & Recoil
+		// Apply Accuracy Stats
 		AimVariance = Row->AimVariance;
+		MinSpread = Row->AimVariance;
+		
+		CurrentSpread = MinSpread;
 
 		// Reset State
 		CurrentAmmo = MaxAmmo;
@@ -155,8 +191,8 @@ void UTP_WeaponComponent::Fire()
 				// Calculate direction from Muzzle to the Target Point
 				FVector DirectionToTarget = (TargetLocation - MuzzleLoc).GetSafeNormal();
 
-				// Apply Bullet Spread (AimVariance)
-				FVector SpreadDirection = FMath::VRandCone(DirectionToTarget, FMath::DegreesToRadians(AimVariance));
+				// Apply Bullet Spread (AimVariance 대신 CurrentSpread 사용!)
+				FVector SpreadDirection = FMath::VRandCone(DirectionToTarget, FMath::DegreesToRadians(CurrentSpread));
 				FRotator SpawnRotation = SpreadDirection.Rotation();
 		
 				FActorSpawnParameters ActorSpawnParams;
@@ -202,6 +238,9 @@ void UTP_WeaponComponent::Fire()
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
+
+	// [New] Increase Spread on Fire
+	CurrentSpread = FMath::Min(CurrentSpread + SpreadIncreasePerShot, MaxSpread);
 }
 
 bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
