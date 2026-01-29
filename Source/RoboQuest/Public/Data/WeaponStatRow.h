@@ -77,9 +77,6 @@ public:
 	// Weapon Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType = EWeaponType::Assault;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UCrosshairWidget> CrosshairClass;
 };
 
 /**

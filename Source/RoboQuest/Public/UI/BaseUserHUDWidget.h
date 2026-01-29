@@ -45,11 +45,21 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SpeedText;
 
-	UPROPERTY(meta = (BindWidget))
-	class UNamedSlot* CrosshairSlot;
+	UPROPERTY(meta = (BindWidgetOptional))
+	UBorder* Crosshair_Top;
 
-	UPROPERTY()
-	UCrosshairWidget* CurrentCrosshairWidget;
+	UPROPERTY(meta = (BindWidgetOptional))
+	UBorder* Crosshair_Bottom;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	UBorder* Crosshair_Left;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	UBorder* Crosshair_Right;
+
+	/** Multiplier to convert spread angle to pixel offset */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Crosshair")
+	float SpreadScale = 30.0f;
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP);
@@ -64,7 +74,5 @@ public:
 	void UpdatePlayerStats(float Shield, float Speed);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void SetCrosshair(TSubclassOf<UCrosshairWidget> NewCrosshairClass);
-
 	void UpdateCrosshairSpread(float Spread);
 };

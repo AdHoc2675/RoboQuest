@@ -2,8 +2,7 @@
 
 
 #include "UI/BaseUserHUDWidget.h"
-#include "Components/NamedSlot.h"
-
+#include "Components/Border.h"
 
 void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP)
 {
@@ -12,13 +11,13 @@ void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, flo
         MaxHP = 1.0f;
     }
 
-	// calculate health ratio (0.0 ~ 1.0)
+    // calculate health ratio (0.0 ~ 1.0)
     float HealthPercent = FMath::Clamp(CurrentHP / MaxHP, 0.0f, 1.0f);
 
-	// calculate scratch ratio (0.0 ~ 1.0)
+    // calculate scratch ratio (0.0 ~ 1.0)
     float ScratchPercent = FMath::Clamp(ScratchHP / MaxHP, 0.0f, 1.0f);
 
-	// update UI elements
+    // update UI elements
     if (HealthBar)
     {
         HealthBar->SetPercent(HealthPercent);
@@ -40,31 +39,18 @@ void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, flo
 
 void UBaseUserHUDWidget::UpdateAmmoState(int32 CurrentAmmo, int32 MaxAmmo)
 {
-    if (CurrentBulletText)
-    {
-        CurrentBulletText->SetText(FText::AsNumber(CurrentAmmo));
-    }
-
-    if (MaxBulletText)
-    {
-        MaxBulletText->SetText(FText::AsNumber(MaxAmmo));
-    }
+    if (CurrentBulletText) CurrentBulletText->SetText(FText::AsNumber(CurrentAmmo));
+    if (MaxBulletText) MaxBulletText->SetText(FText::AsNumber(MaxAmmo));
 }
 
 void UBaseUserHUDWidget::UpdateExpState(float CurrentExp, float MaxExp, int32 CurrentLevel)
 {
-    if (MaxExp <= 0.0f)
-    {
-        MaxExp = 1.0f;
-    }
+    if (MaxExp <= 0.0f) MaxExp = 1.0f;
 
     // calculate exp ratio (0.0 ~ 1.0)
     float ExpPercent = FMath::Clamp(CurrentExp / MaxExp, 0.0f, 1.0f);
     // update UI elements
-    if (EXPBar)
-    {
-        EXPBar->SetPercent(ExpPercent);
-    }
+    if (EXPBar) EXPBar->SetPercent(ExpPercent);
 
     if (LevelText)
     {
@@ -89,31 +75,19 @@ void UBaseUserHUDWidget::UpdatePlayerStats(float DefensePercent, float SpeedMult
         
         // Add '+' sign for positive changes
         FString Sign = (SpdInt >= 0) ? TEXT("+") : TEXT(""); 
-        
 		SpeedText->SetText(FText::Format(NSLOCTEXT("HUD", "SpdFormat", "Spd: {0}{1}%"), FText::FromString(Sign), FText::AsNumber(SpdInt)));
 	}
 }
 
-void UBaseUserHUDWidget::SetCrosshair(TSubclassOf<UCrosshairWidget> NewCrosshairClass)
-{
-	// if there is an existing crosshair, remove it first
-    if (CurrentCrosshairWidget)
-    {
-        CurrentCrosshairWidget->RemoveFromParent();
-        CurrentCrosshairWidget = nullptr;
-    }
-
-	// if no new class provided, just exit
-    if (!NewCrosshairClass) return;
-
-	// create new crosshair widget
-    CurrentCrosshairWidget = CreateWidget<UCrosshairWidget>(GetWorld(), NewCrosshairClass);
-}
-
+// [NEW] Handles crosshair movement directly
 void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
 {
-    if (CurrentCrosshairWidget)
-    {
-        CurrentCrosshairWidget->UpdateSpread(Spread);
-    }
+    // Calculate pixel offset
+	float Offset = Spread * SpreadScale;
+
+    // Move each border
+	if (Crosshair_Top)      Crosshair_Top->SetRenderTranslation(FVector2D(0.0f, -Offset));
+	if (Crosshair_Bottom)   Crosshair_Bottom->SetRenderTranslation(FVector2D(0.0f, Offset));
+	if (Crosshair_Left)     Crosshair_Left->SetRenderTranslation(FVector2D(-Offset, 0.0f));
+	if (Crosshair_Right)    Crosshair_Right->SetRenderTranslation(FVector2D(Offset, 0.0f));
 }
