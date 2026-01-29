@@ -107,6 +107,8 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 		}
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Initialized: %s"), *NewWeaponRowName.ToString());
 }
 
 void UTP_WeaponComponent::Fire()
