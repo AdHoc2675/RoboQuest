@@ -295,6 +295,8 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 	if(!WeaponRowName.IsNone())
 	{
 		InitializeWeapon(WeaponRowName);
+
+		UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Attached: %s"), *WeaponRowName.ToString());
 	}
 	else
 	{
@@ -303,6 +305,8 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 		{
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 		}
+
+		UE_LOG(LogTemp, Warning, TEXT("UTP_WeaponComponent::Weapon Attached with no WeaponRowName set."));
 	}
 
 	return true;
