@@ -176,7 +176,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
-	virtual void BeginPlay() override; // TickComponent 활성화를 위해 필요
+	virtual void BeginPlay() override;
 
 	/** Ends gameplay for this component. */
 	UFUNCTION()
