@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "UI/CrosshairWidget.h" 
 #include "WeaponStatRow.generated.h"
 
 /** 
@@ -66,6 +67,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CritDamage = 1.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AimVariance = 0.5f;
+
 	// Ammo Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EAmmoType AmmoType = EAmmoType::Magazine;
@@ -73,6 +77,21 @@ public:
 	// Weapon Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType = EWeaponType::Assault;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Character Anim")
+	UAnimMontage* CharacterFireAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Character Anim")
+	UAnimMontage* CharacterReloadAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Weapon Anim")
+	UAnimMontage* WeaponFireAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Weapon Anim")
+	UAnimMontage* WeaponReloadAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	USkeletalMesh* WeaponMesh;
 };
 
 /**

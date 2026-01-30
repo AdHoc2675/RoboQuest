@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h" // Required for VRandCone and Math functions
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Animation/AnimInstance.h"
@@ -17,6 +18,10 @@
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
 {
+	// Enable Tick needed for smooth crosshair recovery
+	PrimaryComponentTick.bCanEverTick = true; // Tick 활성화
+	PrimaryComponentTick.bStartWithTickEnabled = true;
+
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 	
@@ -24,6 +29,36 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 	CurrentAmmo = MaxAmmo;
     
     bFireInputHeld = false;
+
+	CurrentSpread = MinSpread;
+}
+
+void UTP_WeaponComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	CurrentSpread = MinSpread;
+}
+
+// Tick 함수 구현
+void UTP_WeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// 1. 탄퍼짐 회복 (사격 중이 아닐 때 혹은 항상)
+	// 목표: MinSpread로 서서히 돌아감
+	if (CurrentSpread > MinSpread)
+	{
+		CurrentSpread = FMath::FInterpTo(CurrentSpread, MinSpread, DeltaTime, SpreadRecoveryRate);
+	}
+	
+	// 2. HUD 업데이트
+	if (Character)
+	{
+		if (UBaseUserHUDWidget* HUD = Character->GetHUDWidget())
+		{
+			HUD->UpdateCrosshairSpread(CurrentSpread);
+		}
+	}
 }
 
 void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
@@ -56,6 +91,22 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		AmmoType = Row->AmmoType;
 		WeaponType = Row->WeaponType;
 
+		// Apply Accuracy Stats
+		AimVariance = Row->AimVariance;
+		MinSpread = Row->AimVariance;
+		
+		CurrentSpread = MinSpread;
+
+		if (Row->WeaponMesh)
+		{
+			SetSkeletalMesh(Row->WeaponMesh);
+		}
+
+		FireAnimation = Row->CharacterFireAnim;
+		ReloadAnimation = Row->CharacterReloadAnim;
+		WeaponFireAnimation = Row->WeaponFireAnim;
+		WeaponReloadAnimation = Row->WeaponReloadAnim;
+
 		// Reset State
 		CurrentAmmo = MaxAmmo;
 		bIsReloading = false;
@@ -66,16 +117,19 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 		}
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Initialized: %s"), *NewWeaponRowName.ToString());
 }
 
 void UTP_WeaponComponent::Fire()
 {
+	// 1. Validation Check
 	if (Character == nullptr || Character->GetController() == nullptr)
 	{
 		return;
 	}
 
-	// Check Rate of Fire (Cooldown)
+	// 2. Cooldown Check (Rate of Fire)
 	double CurrentTime = GetWorld()->GetTimeSeconds();
 	float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
 	
@@ -84,7 +138,7 @@ void UTP_WeaponComponent::Fire()
 		return; 
 	}
 
-	// Check Ammo & Reload
+	// 3. Ammo & Reload Check
 	if (!CanFire())
 	{
 		// Auto reload if out of ammo and not currently reloading
@@ -93,57 +147,101 @@ void UTP_WeaponComponent::Fire()
 			Reload();
 		}
         
-        // [Modified] Just stop the timer loop, DO NOT reset bFireInputHeld
         StopAutomaticFire();
 		return;
 	}
 
-	// Mark Fire Time & Consume Ammo
+	// 4. Update Ammo
 	LastFireTime = CurrentTime;
 	CurrentAmmo--;
 	
-	// Notify ammo change
+	// Notify ammo change UI
 	if (OnAmmoChanged.IsBound())
 	{
 		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
-	// Spawn Projectile(s)
+	// 5. Fire Logic (Updated: Converging Aim + Spread + Recoil)
 	if (ProjectileClass != nullptr)
 	{
 		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+
+		if (World != nullptr && PlayerController != nullptr)
 		{
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			
+			// --- A. Converging Aim Logic (Find where the crosshair is pointing) ---
+			FVector CameraLoc;
+			FRotator CameraRot;
+			PlayerController->GetPlayerViewPoint(CameraLoc, CameraRot);
+
+			FVector TraceStart = CameraLoc;
+			FVector TraceEnd = CameraLoc + (CameraRot.Vector() * 10000.0f); // Trace 100m forward
+
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(GetOwner()); // Ignore self
+
+			// Perform Line Trace to find target point in center of screen
+			bool bHit = World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
+			FVector TargetLocation = bHit ? Hit.Location : TraceEnd;
+
+			// --- B. Determine Muzzle Location ---
+			FVector MuzzleLoc = GetOwner()->GetActorLocation();
+			if (DoesSocketExist(TEXT("Muzzle")))
+			{
+				MuzzleLoc = GetSocketLocation(TEXT("Muzzle"));
+			}
+			else
+			{
+				// Fallback to offset if no socket
+				MuzzleLoc = GetOwner()->GetActorLocation() + CameraRot.RotateVector(MuzzleOffset);
+			}
+
+			// --- C. Spawn Projectiles (Loop for Shotguns) ---
 			for(int32 i = 0; i < BulletCount; i++)
 			{
-				FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-				const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+				// Calculate direction from Muzzle to the Target Point
+				FVector DirectionToTarget = (TargetLocation - MuzzleLoc).GetSafeNormal();
+
+				// Apply Bullet Spread (AimVariance 대신 CurrentSpread 사용!)
+				FVector SpreadDirection = FMath::VRandCone(DirectionToTarget, FMath::DegreesToRadians(CurrentSpread));
+				FRotator SpawnRotation = SpreadDirection.Rotation();
 		
 				FActorSpawnParameters ActorSpawnParams;
-				// Adjust collision handling to always spawn even if colliding with something
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		
-                // Spawn
-				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				ActorSpawnParams.Owner = Character;
+				ActorSpawnParams.Instigator = Character;
+
+                // Spawn Projectile
+				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, MuzzleLoc, SpawnRotation, ActorSpawnParams);
 				
 				if (Projectile)
 				{
 					Projectile->InitializeProjectile(Damage, RangeMeter, CritDamageMultiplier);
 				}
 			}
+
+			// --- D. Apply Recoil ---
+			if (RecoilStrength > 0.0f)
+			{
+				// Randomize recoil slightly for realism
+				float RecoilPitch = -RecoilStrength * FMath::RandRange(0.4f, 0.6f); // Kick up
+				float RecoilYaw = RecoilStrength * FMath::RandRange(-0.25f, 0.25f);   // Shake left/right
+
+				PlayerController->AddPitchInput(RecoilPitch);
+				PlayerController->AddYawInput(RecoilYaw);
+			}
 		}
 	}
 	
 	// Effects
-	// Try and play the sound if specified
+	// Play Sound
 	if (FireSound != nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
 	}
 	
-	// Try and play a firing animation if specified
+	// Play Animation
 	if (FireAnimation != nullptr)
 	{
 		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
@@ -152,6 +250,20 @@ void UTP_WeaponComponent::Fire()
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
+
+	// Play Weapon Animation
+	if (WeaponFireAnimation != nullptr)
+	{
+		// WeaponComponent 자체가 SkeletalMeshComponent이므로 자신의 AnimInstance를 가져옵니다.
+		UAnimInstance* WeaponAnimInstance = GetAnimInstance();
+		if (WeaponAnimInstance != nullptr)
+		{
+			WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
+		}
+	}
+
+	// Increase Spread on Fire
+	CurrentSpread = FMath::Min(CurrentSpread + SpreadIncreasePerShot, MaxSpread);
 }
 
 bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
@@ -204,6 +316,8 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 	if(!WeaponRowName.IsNone())
 	{
 		InitializeWeapon(WeaponRowName);
+
+		UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Attached: %s"), *WeaponRowName.ToString());
 	}
 	else
 	{
@@ -212,6 +326,8 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 		{
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 		}
+
+		UE_LOG(LogTemp, Warning, TEXT("UTP_WeaponComponent::Weapon Attached with no WeaponRowName set."));
 	}
 
 	return true;
@@ -297,6 +413,22 @@ void UTP_WeaponComponent::Reload()
 		{
 			AnimInstance->Montage_Play(ReloadAnimation);
 		}
+	}
+
+	// Play weapon reload animation
+	if (WeaponReloadAnimation != nullptr)
+	{
+		UAnimInstance* WeaponAnimInstance = GetAnimInstance();
+		if (WeaponAnimInstance != nullptr)
+		{
+			WeaponAnimInstance->Montage_Play(WeaponReloadAnimation);
+		}
+	}
+
+	// Play reload sound
+	if (ReloadSound != nullptr && Character)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ReloadSound, Character->GetActorLocation());
 	}
 	
 	// Start timer to finish reloading

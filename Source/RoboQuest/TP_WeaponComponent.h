@@ -30,6 +30,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
 
+	/** AnimMontage to play on the weapon each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UAnimMontage* WeaponFireAnimation;
+
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	FVector MuzzleOffset;
@@ -59,9 +63,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
 	UAnimMontage* ReloadAnimation;
 
+	/** Animation to play on the weapon when reloading */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	UAnimMontage* WeaponReloadAnimation;
+
 	/** Reload Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	class UInputAction* ReloadAction;
+
+	/** Sound to play when reloading */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	USoundBase* ReloadSound;
 
 	/** Delegate for ammo update events */
 	UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -91,6 +103,14 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float CritDamageMultiplier = 1.5f;
 
+	/** Cone half-angle for variance while aiming */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float AimVariance = 0.5f;
+
+	/** Amount of firing recoil to apply to the owner */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
+	float RecoilStrength = 0.5f;
+
 	// Enum Stats
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	EAmmoType AmmoType;
@@ -108,6 +128,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Data")
 	FName WeaponRowName;
 
+	/** Current Spread Value (Angle in degrees) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Accuracy")
+	float CurrentSpread;
+
+	/** Minimum/Base Spread */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float MinSpread = 0.5f;
+
+	/** Maximum Spread */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float MaxSpread = 4.0f;
+
+	/** Spread added per shot */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float SpreadIncreasePerShot = 1.0f;
+
+	/** Spread recovery per second */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float SpreadRecoveryRate = 5.0f;
 
 	// --- Functions ---
 
@@ -144,13 +183,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StopFire();
 
+public:
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 protected:
+	virtual void BeginPlay() override;
+
 	/** Ends gameplay for this component. */
 	UFUNCTION()
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    /** Helper to stop the timer without clearing input state (Internal use) */
-    void StopAutomaticFire();
+	/** Helper to stop the timer without clearing input state (Internal use) */
+	void StopAutomaticFire();
 
 private:
 	/** The Character holding this weapon*/
