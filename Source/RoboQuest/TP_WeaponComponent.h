@@ -71,6 +71,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	class UInputAction* ReloadAction;
 
+	/** Sound to play when reloading */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	USoundBase* ReloadSound;
+
 	/** Delegate for ammo update events */
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnAmmoChanged OnAmmoChanged;

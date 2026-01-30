@@ -424,6 +424,12 @@ void UTP_WeaponComponent::Reload()
 			WeaponAnimInstance->Montage_Play(WeaponReloadAnimation);
 		}
 	}
+
+	// Play reload sound
+	if (ReloadSound != nullptr && Character)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ReloadSound, Character->GetActorLocation());
+	}
 	
 	// Start timer to finish reloading
 	FTimerHandle ReloadTimerHandle;
