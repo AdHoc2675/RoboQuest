@@ -47,6 +47,11 @@ void ARoboQuestCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	if (GetCharacterMovement())
+	{
+		InitialMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	}
+
 	// Create HUD Widget and bind to StatusComponent
 	if (HUDWidgetClass)
 	{
@@ -198,8 +203,6 @@ void ARoboQuestCharacter::OnStatsUpdated(float DefensePercent, float SpeedMultip
 {
 	if (GetCharacterMovement())
 	{
-		// Base Speed is usually 600.0f (or whatever default you set)
-		const float BaseSpeed = 600.0f;
-		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * SpeedMultiplier;
+		GetCharacterMovement()->MaxWalkSpeed = InitialMaxWalkSpeed * SpeedMultiplier;
 	}
 }
