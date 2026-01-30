@@ -25,6 +25,8 @@ void UAbility_ShotgunBlast::OnActivate_Implementation()
 	SpawnParams.Owner = CharacterOwner;
 	SpawnParams.Instigator = CharacterOwner;
 
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
 	for (int32 i = 0; i < PelletCount; i++)
 	{
 		// Calculate random spread within a cone
@@ -33,8 +35,9 @@ void UAbility_ShotgunBlast::OnActivate_Implementation()
 		ARoboQuestProjectile* Proj = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLoc, RandomRot, SpawnParams);
 		if (Proj)
 		{
+			Proj->CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
 			Proj->InitializeProjectile(DamagePerPellet, 15.0f /*Range*/, 1.5f /*Crit*/);
-            
 		}
 	}
 
