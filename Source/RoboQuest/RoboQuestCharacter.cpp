@@ -13,6 +13,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Interactable.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/PlayerAbilityComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -40,6 +41,7 @@ ARoboQuestCharacter::ARoboQuestCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
 	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
+	AbilityComponent = CreateDefaultSubobject<UPlayerAbilityComponent>(TEXT("AbilityComponent"));
 }
 
 void ARoboQuestCharacter::BeginPlay()
@@ -109,6 +111,16 @@ void ARoboQuestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Interact);
+
+		if (AbilityQAction)
+		{
+			EnhancedInputComponent->BindAction(AbilityQAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::UseAbilityQ);
+		}
+		if (AbilityFAction)
+		{
+			EnhancedInputComponent->BindAction(AbilityFAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::UseAbilityF);
+		}
+
 	}
 	else
 	{
@@ -204,5 +216,21 @@ void ARoboQuestCharacter::OnStatsUpdated(float DefensePercent, float SpeedMultip
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = InitialMaxWalkSpeed * SpeedMultiplier;
+	}
+}
+
+void ARoboQuestCharacter::UseAbilityQ()
+{
+	if (AbilityComponent)
+	{
+		AbilityComponent->PerformAbilityQ();
+	}
+}
+
+void ARoboQuestCharacter::UseAbilityF()
+{
+	if (AbilityComponent)
+	{
+		AbilityComponent->PerformAbilityF();
 	}
 }
