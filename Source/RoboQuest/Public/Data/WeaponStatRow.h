@@ -77,6 +77,21 @@ public:
 	// Weapon Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType = EWeaponType::Assault;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Character Anim")
+	UAnimMontage* CharacterFireAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Character Anim")
+	UAnimMontage* CharacterReloadAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Weapon Anim")
+	UAnimMontage* WeaponFireAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Weapon Anim")
+	UAnimMontage* WeaponReloadAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	USkeletalMesh* WeaponMesh;
 };
 
 /**

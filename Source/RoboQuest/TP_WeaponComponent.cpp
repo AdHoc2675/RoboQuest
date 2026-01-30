@@ -97,6 +97,16 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		
 		CurrentSpread = MinSpread;
 
+		if (Row->WeaponMesh)
+		{
+			SetSkeletalMesh(Row->WeaponMesh);
+		}
+
+		FireAnimation = Row->CharacterFireAnim;
+		ReloadAnimation = Row->CharacterReloadAnim;
+		WeaponFireAnimation = Row->WeaponFireAnim;
+		WeaponReloadAnimation = Row->WeaponReloadAnim;
+
 		// Reset State
 		CurrentAmmo = MaxAmmo;
 		bIsReloading = false;
@@ -241,7 +251,18 @@ void UTP_WeaponComponent::Fire()
 		}
 	}
 
-	// [New] Increase Spread on Fire
+	// Play Weapon Animation
+	if (WeaponFireAnimation != nullptr)
+	{
+		// WeaponComponent 자체가 SkeletalMeshComponent이므로 자신의 AnimInstance를 가져옵니다.
+		UAnimInstance* WeaponAnimInstance = GetAnimInstance();
+		if (WeaponAnimInstance != nullptr)
+		{
+			WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
+		}
+	}
+
+	// Increase Spread on Fire
 	CurrentSpread = FMath::Min(CurrentSpread + SpreadIncreasePerShot, MaxSpread);
 }
 
@@ -391,6 +412,16 @@ void UTP_WeaponComponent::Reload()
 		if (AnimInstance)
 		{
 			AnimInstance->Montage_Play(ReloadAnimation);
+		}
+	}
+
+	// Play weapon reload animation
+	if (WeaponReloadAnimation != nullptr)
+	{
+		UAnimInstance* WeaponAnimInstance = GetAnimInstance();
+		if (WeaponAnimInstance != nullptr)
+		{
+			WeaponAnimInstance->Montage_Play(WeaponReloadAnimation);
 		}
 	}
 	

@@ -30,6 +30,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
 
+	/** AnimMontage to play on the weapon each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UAnimMontage* WeaponFireAnimation;
+
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	FVector MuzzleOffset;
@@ -58,6 +62,10 @@ public:
 	/** Animation to play when reloading */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
 	UAnimMontage* ReloadAnimation;
+
+	/** Animation to play on the weapon when reloading */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	UAnimMontage* WeaponReloadAnimation;
 
 	/** Reload Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
