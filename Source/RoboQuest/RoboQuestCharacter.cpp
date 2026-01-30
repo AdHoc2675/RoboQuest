@@ -224,6 +224,8 @@ void ARoboQuestCharacter::UseAbilityQ()
 	if (AbilityComponent)
 	{
 		AbilityComponent->PerformAbilityQ();
+
+		UE_LOG(LogTemp, Log, TEXT("ARoboQuestCharacter::Ability Q Pressed"));
 	}
 }
 
@@ -232,5 +234,7 @@ void ARoboQuestCharacter::UseAbilityF()
 	if (AbilityComponent)
 	{
 		AbilityComponent->PerformAbilityF();
+
+		UE_LOG(LogTemp, Log, TEXT("ARoboQuestCharacter::Ability F Pressed"));
 	}
 }

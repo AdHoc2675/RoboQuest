@@ -14,6 +14,9 @@ class ARoboQuestProjectile : public AActor
 {
 	GENERATED_BODY()
 
+public:
+	ARoboQuestProjectile();
+
 	/** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category=Projectile)
 	USphereComponent* CollisionComp;
@@ -21,9 +24,6 @@ class ARoboQuestProjectile : public AActor
 	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
-
-public:
-	ARoboQuestProjectile();
 
 	/** called when projectile hits something */
 	UFUNCTION()
