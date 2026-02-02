@@ -3,6 +3,7 @@
 #include "Enemy/EnemySpawnPoint.h"
 #include "Components/ArrowComponent.h"
 #include "Engine/World.h"
+#include "AIController.h"
 
 // Sets default values
 AEnemySpawnPoint::AEnemySpawnPoint()
@@ -29,6 +30,11 @@ AEnemyBase* AEnemySpawnPoint::SpawnEnemy()
     
     // Instant spawn at this actor's location and rotation
     AEnemyBase* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyBase>(EnemyClassToSpawn, GetActorLocation(), GetActorRotation(), SpawnParams);
+
+    if (SpawnedEnemy)
+    {
+        SpawnedEnemy->SpawnDefaultController();
+    }
 
     return SpawnedEnemy;
 }
