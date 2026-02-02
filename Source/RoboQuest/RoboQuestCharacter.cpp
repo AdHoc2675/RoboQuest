@@ -88,6 +88,12 @@ void ARoboQuestCharacter::BeginPlay()
 				// Initial stats application
 				OnStatsUpdated(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
 			}
+
+			if (AbilityComponent)
+			{
+				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityQ, AbilityComponent->GetAbilityQ());
+				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityF, AbilityComponent->GetAbilityF());
+			}
 		}
 	}
 }

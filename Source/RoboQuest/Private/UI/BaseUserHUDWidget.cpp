@@ -2,6 +2,7 @@
 
 
 #include "UI/BaseUserHUDWidget.h"
+#include "UI/AbilityDisplayWidget.h"
 #include "Components/Border.h"
 
 void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP)
@@ -79,7 +80,7 @@ void UBaseUserHUDWidget::UpdatePlayerStats(float DefensePercent, float SpeedMult
 	}
 }
 
-// [NEW] Handles crosshair movement directly
+// Handles crosshair movement directly
 void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
 {
     // Calculate pixel offset
@@ -90,4 +91,28 @@ void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
 	if (Crosshair_Bottom)   Crosshair_Bottom->SetRenderTranslation(FVector2D(0.0f, Offset));
 	if (Crosshair_Left)     Crosshair_Left->SetRenderTranslation(FVector2D(-Offset, 0.0f));
 	if (Crosshair_Right)    Crosshair_Right->SetRenderTranslation(FVector2D(Offset, 0.0f));
+}
+
+// create and assign the widget class set in the ability to the slot
+void UBaseUserHUDWidget::AssignAbilityToSlot(UNamedSlot* TargetSlot, URoboQuestAbility* Ability)
+{
+    if (!TargetSlot || !Ability || !Ability->AbilityWidgetClass)
+    {
+        // If there is no ability or widget class, leave it empty.
+        if (TargetSlot) TargetSlot->ClearChildren();
+        return;
+    }
+
+	// 1. Create a dedicated widget for the ability
+    UAbilityDisplayWidget* NewWidget = CreateWidget<UAbilityDisplayWidget>(GetWorld(), Ability->AbilityWidgetClass);
+
+    if (NewWidget)
+    {
+		// 2. Bind ability data (to read cooldown, etc.)
+        NewWidget->BindAbility(Ability);
+
+		// 3. Clear the contents of the slot and mount the new widget
+        TargetSlot->ClearChildren();
+        TargetSlot->AddChild(NewWidget);
+    }
 }

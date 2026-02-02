@@ -44,7 +44,6 @@ USceneComponent* UAbility_HomingMissile::FindNearestEnemy()
 	if (!CharacterOwner) return nullptr;
 
 	TArray<AActor*> FoundEnemies;
-	// 모든 EnemyBotBase 클래스 탐색 (적 베이스 클래스에 맞게 수정 필요) <- write in english
 	// Searching for all EnemyBotBase class (modify according to the enemy base class)
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyBotBase::StaticClass(), FoundEnemies);
 

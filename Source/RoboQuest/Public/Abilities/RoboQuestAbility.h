@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "UI/AbilityDisplayWidget.h"
 #include "RoboQuestAbility.generated.h"
 
 class ARoboQuestCharacter;
@@ -58,6 +59,10 @@ public:
 	/** Icon (For UI) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability Info")
 	UTexture2D* Icon;
+
+	/** Ability Widget Class (For UI) */
+	UPROPERTY(EditDefaultsOnly, Category = "Ability Info|UI")
+	TSubclassOf<UAbilityDisplayWidget> AbilityWidgetClass;
 
 protected:
 	/** Character that owns this ability */

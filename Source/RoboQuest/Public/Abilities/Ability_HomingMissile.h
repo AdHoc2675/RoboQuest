@@ -26,7 +26,7 @@ protected:
 
 	/* The radius within which to search for enemies */
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Config")
-	float SearchRadius = 2000.0f;
+	float SearchRadius = 500.0f;
 
 	/* Spawn offset from the character's location */
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Config")
