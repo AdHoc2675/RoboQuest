@@ -7,6 +7,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "UI/CrosshairWidget.h"
+#include "Components/NamedSlot.h"
 #include "BaseUserHUDWidget.generated.h"
 
 /**
@@ -57,6 +58,12 @@ public:
 	UPROPERTY(meta = (BindWidgetOptional))
 	UBorder* Crosshair_Right;
 
+	UPROPERTY(meta = (BindWidget))
+	UNamedSlot* Slot_AbilityQ;
+
+	UPROPERTY(meta = (BindWidget))
+	UNamedSlot* Slot_AbilityF;
+
 	/** Multiplier to convert spread angle to pixel offset */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Crosshair")
 	float SpreadScale = 30.0f;
@@ -75,4 +82,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateCrosshairSpread(float Spread);
+
+	void AssignAbilityToSlot(UNamedSlot* TargetSlot, URoboQuestAbility* Ability);
 };

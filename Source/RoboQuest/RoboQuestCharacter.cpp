@@ -13,6 +13,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Interactable.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/PlayerAbilityComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -40,12 +41,18 @@ ARoboQuestCharacter::ARoboQuestCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
 	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
+	AbilityComponent = CreateDefaultSubobject<UPlayerAbilityComponent>(TEXT("AbilityComponent"));
 }
 
 void ARoboQuestCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	if (GetCharacterMovement())
+	{
+		InitialMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	}
 
 	// Create HUD Widget and bind to StatusComponent
 	if (HUDWidgetClass)
@@ -81,6 +88,12 @@ void ARoboQuestCharacter::BeginPlay()
 				// Initial stats application
 				OnStatsUpdated(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
 			}
+
+			if (AbilityComponent)
+			{
+				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityQ, AbilityComponent->GetAbilityQ());
+				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityF, AbilityComponent->GetAbilityF());
+			}
 		}
 	}
 }
@@ -104,6 +117,16 @@ void ARoboQuestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Interact);
+
+		if (AbilityQAction)
+		{
+			EnhancedInputComponent->BindAction(AbilityQAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::UseAbilityQ);
+		}
+		if (AbilityFAction)
+		{
+			EnhancedInputComponent->BindAction(AbilityFAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::UseAbilityF);
+		}
+
 	}
 	else
 	{
@@ -198,8 +221,26 @@ void ARoboQuestCharacter::OnStatsUpdated(float DefensePercent, float SpeedMultip
 {
 	if (GetCharacterMovement())
 	{
-		// Base Speed is usually 600.0f (or whatever default you set)
-		const float BaseSpeed = 600.0f;
-		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * SpeedMultiplier;
+		GetCharacterMovement()->MaxWalkSpeed = InitialMaxWalkSpeed * SpeedMultiplier;
+	}
+}
+
+void ARoboQuestCharacter::UseAbilityQ()
+{
+	if (AbilityComponent)
+	{
+		AbilityComponent->PerformAbilityQ();
+
+		UE_LOG(LogTemp, Log, TEXT("ARoboQuestCharacter::Ability Q Pressed"));
+	}
+}
+
+void ARoboQuestCharacter::UseAbilityF()
+{
+	if (AbilityComponent)
+	{
+		AbilityComponent->PerformAbilityF();
+
+		UE_LOG(LogTemp, Log, TEXT("ARoboQuestCharacter::Ability F Pressed"));
 	}
 }

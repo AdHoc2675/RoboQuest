@@ -14,6 +14,8 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
+class UTP_WeaponComponent;
+class UPlayerAbilityComponent;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -44,6 +46,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status", meta = (AllowPrivateAccess = "true"))
 	UStatusComponent* StatusComponent;
 
+	float InitialMaxWalkSpeed;
+
+	/** Player Ability Component (Q, F, Passive Skills) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
+	UPlayerAbilityComponent* AbilityComponent;
+
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
@@ -55,6 +63,14 @@ public:
 	// Max distance to check for interactable objects (e.g. 300 units)
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	float InteractionRange = 300.0f;
+
+	/** Ability Q Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AbilityQAction;
+
+	/** Ability F Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AbilityFAction;
 
 public:
 	ARoboQuestCharacter();
@@ -85,6 +101,9 @@ protected:
 	void OnStatsUpdated(float DefensePercent, float SpeedMultiplier);
 
 	void Interact();
+
+	void UseAbilityQ();
+	void UseAbilityF();
 
 public:
 	/** Returns Mesh1P subobject **/

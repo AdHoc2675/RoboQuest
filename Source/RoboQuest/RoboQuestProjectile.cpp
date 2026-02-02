@@ -38,6 +38,11 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 {
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != GetOwner()))
 	{
+		if (OtherActor->IsA(ARoboQuestProjectile::StaticClass()))
+		{
+			return;
+		}
+
 		// Friendly Fire Prevention: Check if both the Shooter and the Victim are Enemies
 		AActor* ProjectileOwner = GetOwner();
 		if (ProjectileOwner)
