@@ -87,20 +87,46 @@ void AEnemyBase::Die()
 
 void AEnemyBase::SpawnDrops()
 {
-    if (!HealingCellClass) return;
+    if (!HealingCellClass || !PowerCellClass) return;
 
-    for (int32 i = 0; i < DropCount; i++)
+    // Healing Cells (Guaranteed drop based on Count)
+    if (HealingCellClass)
     {
-        // Random Spawn Position around the enemy
-        FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 20.0f;
-        SpawnLoc.Z += 50.0f; // Drop from body height
+        for (int32 i = 0; i < DropCount; i++)
+        {
+            // Random Spawn Position around the enemy
+            FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 20.0f;
+            SpawnLoc.Z += 50.0f; // Drop from body height
 
-        FRotator SpawnRot = FMath::VRand().Rotation();
+            FRotator SpawnRot = FMath::VRand().Rotation();
 
-        FActorSpawnParameters Params;
-        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-        Params.Owner = this;
+            FActorSpawnParameters Params;
+            Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            Params.Owner = this;
 
-        GetWorld()->SpawnActor<AActor>(HealingCellClass, SpawnLoc, SpawnRot, Params);
+            GetWorld()->SpawnActor<AActor>(HealingCellClass, SpawnLoc, SpawnRot, Params);
+        }
+    }
+
+    // Power Cells (Probabilistic Drop for Upgrade Currency)
+    if (PowerCellClass)
+    {
+        // Check Probability (0.0 ~ 1.0)
+        if (FMath::FRand() <= PowerDropChance)
+        {
+            for (int32 i = 0; i < PowerDropCount; i++)
+            {
+                FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 25.0f;
+                SpawnLoc.Z += 60.0f; // Drop from body height
+
+                FRotator SpawnRot = FMath::VRand().Rotation();
+
+                FActorSpawnParameters Params;
+                Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+                Params.Owner = this;
+
+                GetWorld()->SpawnActor<AActor>(PowerCellClass, SpawnLoc, SpawnRot, Params);
+            }
+        }
     }
 }

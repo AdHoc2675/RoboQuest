@@ -13,9 +13,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHealthChanged, float, CurrentH
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnExpChanged, float, CurrentExp, float, NextLevelExp, int32, CurrentLevel);
 // Level up event
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelUp, int32, NewLevel);
-
 // Stats change event (Defense %, Speed Multiplier)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatsChanged, float, DefensePercent, float, SpeedMultiplier);
+// Power change event (Currency for weapon upgrades)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPowerChanged, int32, NewPowerAmount);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ROBOQUEST_API UStatusComponent : public UActorComponent
@@ -73,6 +74,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status|Experience")
 	float ExpIncreaseFactor = 1.2f;
 
+	// --- Power (Currency for Weapon Upgrade) ---
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status|Power")
+	int32 CurrentPower = 100;
+
 	// --- Events ---
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChanged OnHealthChanged;
@@ -88,6 +93,10 @@ public:
 	// Stats change event
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnStatsChanged OnStatsChanged;
+
+	// Power change event
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnPowerChanged OnPowerChanged;
 
 	// --- Functions ---
 	UFUNCTION(BlueprintCallable, Category = "Status")
@@ -105,6 +114,14 @@ public:
 
 	// Update NextLevelExp based on CurrentLevel and ExpIncreaseFactor
 	void UpdateNextLevelExp();
+
+	// Add Power amount (Currency)
+	UFUNCTION(BlueprintCallable, Category = "Status")
+	void AddPower(int32 Amount);
+
+	// Consume Power (Returns true if successful)
+	UFUNCTION(BlueprintCallable, Category = "Status")
+	bool ConsumePower(int32 Amount);
 
 	// --- Enemy Stat Initialization ---
 	// Initialization function: Set stats based on enemy ID (RowName) and level

@@ -54,6 +54,20 @@ protected:
 	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "Drops")
 	int32 DropCount = 3;
 
+	// --- Power Drops ---
+
+	// Class of the Power Cell to drop (For Upgrade Currency)
+	UPROPERTY(EditDefaultsOnly, Category = "Drops")
+	TSubclassOf<AActor> PowerCellClass;
+
+	// Probability to drop Power Cells (0.0 to 1.0)
+	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "Drops")
+	float PowerDropChance = 0.1f;
+
+	// Number of Power Cells to drop if chance succeeds
+	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "Drops")
+	int32 PowerDropCount = 1;
+
 public:	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
