@@ -148,8 +148,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
 	float SpreadRecoveryRate = 5.0f;
 
-	// --- Functions ---
-
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
 
@@ -182,6 +180,14 @@ public:
 	/** Stop automatic fire (Called by Input Completed) */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StopFire();
+
+	// Current Weapon Level (Starts at 1)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Upgrade")
+	int32 WeaponLevel = 1;
+
+	// Apply upgrade: Increase stats and level up
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void UpgradeWeapon();
 
 public:
 	// Called every frame

@@ -39,6 +39,27 @@ void UTP_WeaponComponent::BeginPlay()
 	CurrentSpread = MinSpread;
 }
 
+void UTP_WeaponComponent::UpgradeWeapon()
+{
+	// Increase Weapon Level
+	WeaponLevel++;
+
+	// Increase Damage (e.g., +20% per level)
+	float DamageMultiplier = 1.2f;
+	Damage *= DamageMultiplier;
+
+	// Refill Ammo as a bonus
+	CurrentAmmo = MaxAmmo;
+
+	// Notify UI
+	if (OnAmmoChanged.IsBound())
+	{
+		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Upgraded. New Level: %d, New Damage: %f"), WeaponLevel, Damage);
+}
+
 // Tick 함수 구현
 void UTP_WeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
