@@ -80,6 +80,16 @@ void UBaseUserHUDWidget::UpdatePlayerStats(float DefensePercent, float SpeedMult
 	}
 }
 
+// Displays current power cell count as a simple number
+void UBaseUserHUDWidget::UpdatePowerState(int32 CurrentPowerCellCount)
+{
+    if (PowerCellCountText)
+    {
+        // Display strictly as number (e.g. "12")
+        PowerCellCountText->SetText(FText::AsNumber(CurrentPowerCellCount));
+    }
+}
+
 // Handles crosshair movement directly
 void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
 {

@@ -76,7 +76,7 @@ public:
 
 	// --- Power (Currency for Weapon Upgrade) ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status|Power")
-	int32 CurrentPower = 100;
+	int32 CurrentPowerCellCount = 100;
 
 	// --- Events ---
 	UPROPERTY(BlueprintAssignable, Category = "Events")

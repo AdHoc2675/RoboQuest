@@ -167,15 +167,15 @@ void UStatusComponent::AddPower(int32 Amount)
 {
 	if (Amount <= 0) return;
 
-	CurrentPower += Amount;
+	CurrentPowerCellCount += Amount;
 
 	// Broadcast change
 	if (OnPowerChanged.IsBound())
 	{
-		OnPowerChanged.Broadcast(CurrentPower);
+		OnPowerChanged.Broadcast(CurrentPowerCellCount);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("UStatusComponent::Power Added: %d, Total: %d"), Amount, CurrentPower);
+	UE_LOG(LogTemp, Log, TEXT("UStatusComponent::Power Added: %d, Total: %d"), Amount, CurrentPowerCellCount);
 
 }
 
@@ -183,14 +183,14 @@ bool UStatusComponent::ConsumePower(int32 Amount)
 {
 	if (Amount <= 0) return false;
 
-	if (CurrentPower >= Amount)
+	if (CurrentPowerCellCount >= Amount)
 	{
-		CurrentPower -= Amount;
+		CurrentPowerCellCount -= Amount;
 
 		// Broadcast change
 		if (OnPowerChanged.IsBound())
 		{
-			OnPowerChanged.Broadcast(CurrentPower);
+			OnPowerChanged.Broadcast(CurrentPowerCellCount);
 		}
 		return true;
 	}

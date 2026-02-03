@@ -87,6 +87,12 @@ void ARoboQuestCharacter::BeginPlay()
 
 				// Initial stats application
 				OnStatsUpdated(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
+			
+				// connect power delegate
+				StatusComponent->OnPowerChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdatePowerState);
+
+				// force update initial state
+				HUDWidget->UpdatePowerState(StatusComponent->CurrentPowerCellCount);
 			}
 
 			if (AbilityComponent)

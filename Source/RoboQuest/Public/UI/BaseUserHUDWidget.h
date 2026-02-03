@@ -46,6 +46,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SpeedText;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* PowerCellCountText;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	UBorder* Crosshair_Top;
 
@@ -79,6 +82,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdatePlayerStats(float Shield, float Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdatePowerState(int32 CurrentPowerCellCount);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateCrosshairSpread(float Spread);
