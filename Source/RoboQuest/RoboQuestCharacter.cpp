@@ -122,8 +122,8 @@ void ARoboQuestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Look);
 
 		// Interact
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Interact);
-
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::Interact);
+		
 		if (AbilityQAction)
 		{
 			EnhancedInputComponent->BindAction(AbilityQAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::UseAbilityQ);
@@ -176,16 +176,25 @@ void ARoboQuestCharacter::Interact()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.5f, 0, 1.0f);
+
 	// Trace for objects in front of camera
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
 		if (AActor* HitActor = HitResult.GetActor())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("RoboQuestCharacter::Trace Hit Actor: %s"), *HitActor->GetName());
+			
 			// Check if actor implements IInteractable interface
 			if (HitActor->Implements<UInteractable>())
 			{
+				UE_LOG(LogTemp, Warning, TEXT("RoboQuestCharacter::Implements Interface! Executing Interact..."));
 				// Cast to interface and call Interact function
 				IInteractable::Execute_Interact(HitActor, this);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("RoboQuestCharacter::Actor does NOT implement Interactable Interface"));
 			}
 		}
 	}

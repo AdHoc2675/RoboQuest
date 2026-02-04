@@ -4,15 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Interactable.h" // Assuming IInteractable interface is defined here
+#include "Interactable.h" 
 #include "WeaponUpgradeStation.generated.h"
 
 class UStaticMeshComponent;
 class UTextRenderComponent;
 
 /**
- * An interactive station that upgrades the player's weapon.
- * Requires holding the Interact key (E) for a specific duration.
+ * An interactive station that upgrades the player's weapon instantly upon interaction.
  * Costs 'Power' currency equivalent to the current weapon level.
  */
 UCLASS()
@@ -22,38 +21,28 @@ class ROBOQUEST_API AWeaponUpgradeStation : public AActor, public IInteractable
 	
 public:	
 	AWeaponUpgradeStation();
+    // Tick is no longer strictly needed for logic, but can be kept for simple text animations
 	virtual void Tick(float DeltaTime) override;
 
 protected:
 	virtual void BeginPlay() override;
 
-	// --- Components ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* MeshComponent;
 
-    // Text to display cost or status above the station
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UTextRenderComponent* InfoTextRender;
-
-	// --- Config ---
-    // Time required to hold interact to trigger upgrade (Seconds)
-    UPROPERTY(EditAnywhere, Category = "Upgrade")
-    float RequiredHoldTime = 1.0f;
 
 public:
     // Interface implementation
     virtual void Interact_Implementation(AActor* Interactor) override;
 
 private:
-    // Tracks how long the player has been holding interact
-    float CurrentHoldTime = 0.0f;
-
-    // Timestamp of the last interaction to detect when button is released
-    double LastInteractTime = 0.0;
+    double LastInteractTimer = 0.0f; // For temporary text display
 
     // Perform the actual upgrade logic
     void ProcessUpgrade(class ARoboQuestCharacter* PlayerChar);
 
-    // Update the 3D text (e.g. "Hold E to Upgrade")
-    void UpdateInfoText(int32 CurrentCost, int32 PlayerPower);
+    // Update the 3D text
+    void UpdateInfoText(FString NewText);
 };

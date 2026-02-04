@@ -100,6 +100,7 @@ protected:
 	UFUNCTION()
 	void OnStatsUpdated(float DefensePercent, float SpeedMultiplier);
 
+	// One-shot interaction (Started)
 	void Interact();
 
 	void UseAbilityQ();
