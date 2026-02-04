@@ -8,7 +8,6 @@
 #include "WeaponUpgradeBench.generated.h"
 
 class UStaticMeshComponent;
-class UTextRenderComponent;
 
 /**
  * A robust weapon upgrade station logic.
@@ -36,9 +35,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* BenchMesh;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    UTextRenderComponent* InfoTextRender;
-
 	// Sound to play when upgrade is successful
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	USoundBase* UpgradeSuccessSound;
@@ -50,10 +46,11 @@ protected:
 private:
 	// Time when the interaction last occurred, used to reset text
 	double LastInteractTime = -10.0;
+    
+    // Cached reference to the interacting player to clear the HUD message later
+    UPROPERTY()
+    class ARoboQuestCharacter* LastInteractorCharacter;
 
-	// Helper to update the text display
-	void SetInfoText(FString NewText, FColor Color = FColor::White);
-
-	// Default message to display
-    const FString DefaultMessage = TEXT("Weapon Upgrade\n[ Interact (E) ]");
+	// Helper to update the text display on the Player's HUD
+	void UpdateHUDMessage(class ARoboQuestCharacter* Player, FString NewText, FLinearColor Color);
 };

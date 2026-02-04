@@ -49,6 +49,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PowerCellCountText;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* InteractionMsgText;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	UBorder* Crosshair_Top;
 
@@ -85,6 +88,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdatePowerState(int32 CurrentPowerCellCount);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void SetInteractionMessage(FString Message, FLinearColor Color = FLinearColor::White);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateCrosshairSpread(float Spread);

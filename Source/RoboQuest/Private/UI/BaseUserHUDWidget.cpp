@@ -90,6 +90,25 @@ void UBaseUserHUDWidget::UpdatePowerState(int32 CurrentPowerCellCount)
     }
 }
 
+void UBaseUserHUDWidget::SetInteractionMessage(FString Message, FLinearColor Color)
+{
+    if (InteractionMsgText)
+    {
+        InteractionMsgText->SetText(FText::FromString(Message));
+        InteractionMsgText->SetColorAndOpacity(FSlateColor(Color));
+
+        // Optional: Visibility handling
+        if (Message.IsEmpty())
+        {
+            InteractionMsgText->SetVisibility(ESlateVisibility::Hidden);
+        }
+        else
+        {
+            InteractionMsgText->SetVisibility(ESlateVisibility::HitTestInvisible);
+        }
+    }
+}
+
 // Handles crosshair movement directly
 void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
 {
