@@ -42,6 +42,10 @@ ARoboQuestCharacter::ARoboQuestCharacter()
 
 	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 	AbilityComponent = CreateDefaultSubobject<UPlayerAbilityComponent>(TEXT("AbilityComponent"));
+
+	// Enable Tick
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true; // Ensure it starts ticking
 }
 
 void ARoboQuestCharacter::BeginPlay()
@@ -102,6 +106,14 @@ void ARoboQuestCharacter::BeginPlay()
 			}
 		}
 	}
+}
+
+void ARoboQuestCharacter::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    
+    // Continuously check for interactable objects
+    PerformInteractionCheck();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -261,4 +273,41 @@ void ARoboQuestCharacter::UseAbilityF()
 
 		UE_LOG(LogTemp, Log, TEXT("ARoboQuestCharacter::Ability F Pressed"));
 	}
+}
+
+void ARoboQuestCharacter::PerformInteractionCheck()
+{
+    // Need HUD to display anything
+    if (!HUDWidget) return;
+
+	FVector Start = GetFirstPersonCameraComponent()->GetComponentLocation();
+	FVector End = Start + (GetFirstPersonCameraComponent()->GetForwardVector() * InteractionRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+    
+    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+    AActor* HitActor = bHit ? HitResult.GetActor() : nullptr;
+
+    // Optimization: Check if the actor changed
+    if (HitActor != LastLookAtActor)
+    {
+        LastLookAtActor = HitActor;
+        
+        bool bIsInteractable = false;
+        FString Message = TEXT("");
+
+        if (HitActor && HitActor->Implements<UInteractable>())
+        {
+            bIsInteractable = true;
+            // Get message via Interface
+            FText PromptText = IInteractable::Execute_GetInteractionPrompt(HitActor);
+            Message = PromptText.ToString();
+        }
+        
+        // Update HUD
+        // Note: We use SetInteractionMessage. Passing empty string clears it.
+        HUDWidget->SetInteractionMessage(Message);
+    }
 }

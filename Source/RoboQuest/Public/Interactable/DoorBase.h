@@ -41,6 +41,8 @@ public:
     // Implementation of the Interact method from IInteractable
     virtual void Interact_Implementation(AActor* Interactor) override;
 
+    virtual FText GetInteractionPrompt_Implementation() override;
+
     // Helper to handle collision handling
     void UpdateDoorState();
 };

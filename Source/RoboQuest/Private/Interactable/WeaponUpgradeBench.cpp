@@ -109,6 +109,11 @@ void AWeaponUpgradeBench::Interact_Implementation(AActor* Interactor)
     }
 }
 
+FText AWeaponUpgradeBench::GetInteractionPrompt_Implementation()
+{
+    return FText::FromString(TEXT("[E] to Upgrade Weapon"));
+}
+
 void AWeaponUpgradeBench::UpdateHUDMessage(ARoboQuestCharacter* Player, FString NewText, FLinearColor Color)
 {
     if (Player)

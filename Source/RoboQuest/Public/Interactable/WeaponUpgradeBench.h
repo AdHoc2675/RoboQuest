@@ -31,6 +31,8 @@ public:
     // Interface implementation
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
+	virtual FText GetInteractionPrompt_Implementation() override;
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* BenchMesh;

@@ -75,6 +75,8 @@ public:
 public:
 	ARoboQuestCharacter();
 
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	virtual void BeginPlay();
 
@@ -109,6 +111,13 @@ protected:
 
 	void UseAbilityQ();
 	void UseAbilityF();
+
+	// Trace to check for interactable objects and update HUD
+	void PerformInteractionCheck();
+
+	// Cache the last seen actpr to minimize UI updates
+	UPROPERTY()
+	AActor* LastLookAtActor;
 
 public:
 	/** Returns Mesh1P subobject **/

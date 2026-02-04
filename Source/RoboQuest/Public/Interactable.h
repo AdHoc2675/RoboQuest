@@ -27,4 +27,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	void Interact(AActor* Interactor);
 	virtual void Interact_Implementation(AActor* Interactor) = 0;
+
+	// Returns the prompt text to display (e.g. "[E] to Upgrade")
+	// Returns FString for easier conversion, or FText for localization. Let's use FText.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	FText GetInteractionPrompt();
+	virtual FText GetInteractionPrompt_Implementation() { return FText::GetEmpty(); }
 };
