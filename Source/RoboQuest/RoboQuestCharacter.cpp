@@ -290,24 +290,33 @@ void ARoboQuestCharacter::PerformInteractionCheck()
     bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
     AActor* HitActor = bHit ? HitResult.GetActor() : nullptr;
 
-    // Optimization: Check if the actor changed
     if (HitActor != LastLookAtActor)
     {
         LastLookAtActor = HitActor;
         
-        bool bIsInteractable = false;
         FString Message = TEXT("");
+        bool bShowWeaponDetail = false;
 
         if (HitActor && HitActor->Implements<UInteractable>())
         {
-            bIsInteractable = true;
-            // Get message via Interface
+            // 1. Get Prompt
             FText PromptText = IInteractable::Execute_GetInteractionPrompt(HitActor);
             Message = PromptText.ToString();
+
+            // 2. Check if we should show weapon details
+            bShowWeaponDetail = IInteractable::Execute_ShouldShowWeaponDetail(HitActor);
         }
         
-        // Update HUD
-        // Note: We use SetInteractionMessage. Passing empty string clears it.
+        // Update HUD Prompt
         HUDWidget->SetInteractionMessage(Message);
+
+        // If showing, ensure data is fresh (Optional, but good if stats changed externally)
+        if (bShowWeaponDetail && CurrentWeapon)
+        {
+             HUDWidget->InitializeWeaponSlot(CurrentWeapon); // Re-refresh data
+        }
+
+		// Update Weapon Detail Visibility
+		HUDWidget->SetWeaponDetailVisibility(bShowWeaponDetail);
     }
 }

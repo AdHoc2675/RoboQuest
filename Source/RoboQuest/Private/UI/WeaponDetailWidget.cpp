@@ -1,0 +1,117 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#include "UI/WeaponDetailWidget.h"
+#include "RoboQuest/TP_WeaponComponent.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+
+void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
+{
+    if (!WeaponComp) return;
+
+    // 1. Header Info
+    if (Text_WeaponName)
+    {
+        // Use RowName or a display name lookup
+        Text_WeaponName->SetText(FText::FromName(WeaponComp->WeaponRowName));
+    }
+
+    // 2. Level & Rarity
+    if (Text_WeaponLevel)
+    {
+        Text_WeaponLevel->SetText(FText::Format(NSLOCTEXT("UI", "LevelFmt", "Level {0}"), FText::AsNumber(WeaponComp->WeaponLevel)));
+    }
+    
+    if (Text_Rarity)
+    {
+        Text_Rarity->SetText(GetRarityText(WeaponComp->WeaponLevel));
+        Text_Rarity->SetColorAndOpacity(FSlateColor(GetRarityColor(WeaponComp->WeaponLevel)));
+        // Note: You can also bind proper stars (images) here if you add UImage bindings.
+    }
+
+    // 3. Stats Grid
+    if (Text_Value_Damage)
+    {
+        // One decimal place (e.g. 30.8)
+        Text_Value_Damage->SetText(FText::AsNumber(WeaponComp->Damage, &FNumberFormattingOptions::DefaultWithGrouping()));
+    }
+
+    if (Text_Value_FireRate)
+    {
+        // Display as "6.67/s"
+        FString RateStr = FString::Printf(TEXT("%.2f/s"), WeaponComp->RateOfFire);
+        Text_Value_FireRate->SetText(FText::FromString(RateStr));
+    }
+
+    if (Text_Value_Range)
+    {
+        // Assume RangeMeter is the effective range or radius. "100.0m"
+        FString RangeStr = FString::Printf(TEXT("%.1fm"), WeaponComp->RangeMeter);
+        Text_Value_Range->SetText(FText::FromString(RangeStr));
+    }
+
+    if (Text_Value_Crit)
+    {
+        // "x1.5"
+        FString CritStr = FString::Printf(TEXT("x%.1f"), WeaponComp->CritDamageMultiplier);
+        Text_Value_Crit->SetText(FText::FromString(CritStr));
+    }
+
+    if (Text_Value_AmmoType)
+    {
+        FString TypeStr = (WeaponComp->AmmoType == EAmmoType::Energy) ? TEXT("Energy") : TEXT("Magazine");
+        Text_Value_AmmoType->SetText(FText::FromString(TypeStr));
+    }
+
+    // 4. Affixes (Mock data population as WeaponComponent has no perks yet)
+    if (VBox_AffixList)
+    {
+        VBox_AffixList->ClearChildren();
+
+        // [Mock] Add dynamic stats based on level
+        if (WeaponComp->WeaponLevel >= 5)
+        {
+            AddAffixRow(TEXT("Level 5: Damage +40% & Range +50%"), FLinearColor(0.8f, 0.8f, 0.8f)); // Greyish
+        }
+        
+        // [Mock] Add a trait based on Weapon Name
+        if (WeaponComp->WeaponRowName.ToString().Contains("Torpedo"))
+        {
+            AddAffixRow(TEXT("Explosive: Projectiles explode on impact"), FLinearColor(1.0f, 0.8f, 0.2f)); // Orange
+            AddAffixRow(TEXT("Homing: Projectiles seek targets"), FLinearColor::White);
+        }
+    }
+}
+
+void UWeaponDetailWidget::AddAffixRow(FString AffixText, FLinearColor Color)
+{
+    if (!VBox_AffixList) return;
+
+    // Create a new TextBlock dynamically
+    UTextBlock* NewBlock = NewObject<UTextBlock>(this);
+    if (NewBlock)
+    {
+        NewBlock->SetText(FText::FromString(TEXT("| ") + AffixText));
+        NewBlock->SetColorAndOpacity(FSlateColor(Color));
+        NewBlock->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 10)); // Example font
+        
+        VBox_AffixList->AddChild(NewBlock);
+    }
+}
+
+FText UWeaponDetailWidget::GetRarityText(int32 Level)
+{
+    if (Level >= 15) return FText::FromString(TEXT("Fantastic"));
+    if (Level >= 10) return FText::FromString(TEXT("Epic"));
+    if (Level >= 5)  return FText::FromString(TEXT("Rare"));
+    return FText::FromString(TEXT("Common"));
+}
+
+FLinearColor UWeaponDetailWidget::GetRarityColor(int32 Level)
+{
+    if (Level >= 15) return FLinearColor(1.0f, 0.5f, 0.0f); // Orange
+    if (Level >= 10) return FLinearColor(0.6f, 0.2f, 1.0f); // Purple
+    if (Level >= 5)  return FLinearColor(0.2f, 0.6f, 1.0f); // Blue
+    return FLinearColor(0.8f, 0.8f, 0.8f); // White/Grey
+}
+

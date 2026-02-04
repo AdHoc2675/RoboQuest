@@ -31,6 +31,8 @@ public:
     // Interface implementation
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
+	virtual bool ShouldShowWeaponDetail_Implementation() override;
+
 	virtual FText GetInteractionPrompt_Implementation() override;
 
 protected:

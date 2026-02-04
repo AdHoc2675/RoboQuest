@@ -33,4 +33,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	FText GetInteractionPrompt();
 	virtual FText GetInteractionPrompt_Implementation() { return FText::GetEmpty(); }
+
+	// Should this interactable trigger the weapon detail popup?
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	bool ShouldShowWeaponDetail();
+	virtual bool ShouldShowWeaponDetail_Implementation() { return false; }
 };
