@@ -85,6 +85,11 @@ void AWeaponUpgradeBench::Interact_Implementation(AActor* Interactor)
         FString SuccessMsg = FString::Printf(TEXT("UPGRADED!\nLv.%d -> Lv.%d (-%d Power)"), OldLevel, NewLevel, UpgradeCost);
         UpdateHUDMessage(Player, SuccessMsg, FLinearColor::Green);
 
+        if (UBaseUserHUDWidget* HUD = Player->GetHUDWidget())
+        {
+            HUD->InitializeWeaponSlot(WeaponComp);
+        }
+
 		UE_LOG(LogTemp, Log, TEXT("WeaponUpgradeBench::Weapon upgraded from Level %d to Level %d"), OldLevel, NewLevel);
         
         if (UpgradeSuccessSound)
