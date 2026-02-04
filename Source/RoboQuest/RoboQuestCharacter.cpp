@@ -202,6 +202,9 @@ void ARoboQuestCharacter::Interact()
 
 void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
 {
+	// Update the tracked weapon reference
+	CurrentWeapon = WeaponComp;
+
 	if (HUDWidget && WeaponComp)
 	{
 		// if already bound, may need to unbind first (on weapon swap)

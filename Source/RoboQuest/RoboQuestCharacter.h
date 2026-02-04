@@ -86,6 +86,10 @@ protected:
 
 	bool bIsDead = false;
 
+    // Track the currently equipped weapon
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    UTP_WeaponComponent* CurrentWeapon;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -118,6 +122,10 @@ public:
 
 	/** Binds the given weapon component to the HUD */
 	void BindWeaponToHUD(class UTP_WeaponComponent* WeaponComp);
+    
+    // Get the currently equipped weapon
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    UTP_WeaponComponent* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	/** Returns whether the character is alive */
 	bool IsAlive() const { return !bIsDead; }
