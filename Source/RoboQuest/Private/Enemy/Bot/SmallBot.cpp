@@ -29,9 +29,9 @@ void ASmallBot::BeginPlay()
 	Super::BeginPlay();
 
 	// Initialize Stats (Stats Row Name: "SmallBot")
-	if (StatusComponent)
+	if (StatusComponent2)
 	{
-		StatusComponent->InitializeEnemyStats(TEXT("SmallBot"), 1);
+		StatusComponent2->InitializeEnemyStats(TEXT("SmallBot"), 1);
 	}
 
 	// Start firing loop (with random initial delay to desync multiple bots)

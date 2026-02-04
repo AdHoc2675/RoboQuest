@@ -17,9 +17,9 @@ void ASmallPod::BeginPlay()
 	Super::BeginPlay();
 
 	// Initialize stats from DataTable (RowName: "SmallPod", Level: 1)
-	if (StatusComponent)
+	if (StatusComponent2)
 	{
-		StatusComponent->InitializeEnemyStats(TEXT("SmallPod"), 1);
+		StatusComponent2->InitializeEnemyStats(TEXT("SmallPod"), 1);
 	}
 
 	// Start the firing loop (Calls TryFire periodically)

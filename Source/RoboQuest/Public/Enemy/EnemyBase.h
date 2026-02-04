@@ -20,7 +20,7 @@ public:
 	AEnemyBase();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStatusComponent* StatusComponent;
+	class UStatusComponent* StatusComponent2;
 
 protected:
 	// Called when the game starts or when spawned

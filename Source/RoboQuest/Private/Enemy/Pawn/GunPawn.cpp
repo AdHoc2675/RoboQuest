@@ -25,9 +25,9 @@ void AGunPawn::BeginPlay()
 	Super::BeginPlay();
 
 	// Initialize stats
-	if (StatusComponent)
+	if (StatusComponent2)
 	{
-		StatusComponent->InitializeEnemyStats(TEXT("GunPawn"), 1);
+		StatusComponent2->InitializeEnemyStats(TEXT("GunPawn"), 1);
 	}
 
 	// Start the firing loop (Calls TryFire periodically)

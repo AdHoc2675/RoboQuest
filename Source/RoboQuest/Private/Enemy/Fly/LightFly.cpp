@@ -22,9 +22,9 @@ void ALightFly::BeginPlay()
 {
 	Super::BeginPlay(); // Base class starts hovering automatically!
 
-	if (StatusComponent)
+	if (StatusComponent2)
 	{
-		StatusComponent->InitializeEnemyStats(TEXT("LightFly"), 1);
+		StatusComponent2->InitializeEnemyStats(TEXT("LightFly"), 1);
 	}
 
 	// Only manage Combat Loop here

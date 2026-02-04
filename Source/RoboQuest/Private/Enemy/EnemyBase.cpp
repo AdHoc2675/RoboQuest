@@ -12,7 +12,7 @@ AEnemyBase::AEnemyBase()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
+    StatusComponent2 = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 }
 
 void AEnemyBase::BeginPlay()
@@ -20,9 +20,9 @@ void AEnemyBase::BeginPlay()
 	Super::BeginPlay();
 	
 	// bind to health changed event
-    if (StatusComponent)
+    if (StatusComponent2)
     {
-        StatusComponent->OnHealthChanged.AddDynamic(this, &AEnemyBase::OnHealthChanged);
+        StatusComponent2->OnHealthChanged.AddDynamic(this, &AEnemyBase::OnHealthChanged);
     }
 }
 
@@ -31,9 +31,9 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
     float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	// apply damage to status component
-    if (StatusComponent && IsAlive())
+    if (StatusComponent2 && IsAlive())
     {
-        StatusComponent->TakeDamage(ActualDamage);
+        StatusComponent2->TakeDamage(ActualDamage);
         
 		// If there is an aggro system, set the DamageCauser as the target here
 
@@ -63,9 +63,9 @@ void AEnemyBase::Die()
 
 	// give exp to player
     ARoboQuestCharacter* PlayerCharacter = Cast<ARoboQuestCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
-    if (PlayerCharacter && StatusComponent)
+    if (PlayerCharacter && StatusComponent2)
     {
-        PlayerCharacter->GetStatusComponent()->AddExp(StatusComponent->ExpReward);
+        PlayerCharacter->GetStatusComponent()->AddExp(StatusComponent2->ExpReward);
 	}
 
 	// Disable collisions
