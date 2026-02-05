@@ -24,8 +24,8 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
     
     if (Text_Rarity)
     {
-        Text_Rarity->SetText(GetRarityText(WeaponComp->WeaponLevel));
-        Text_Rarity->SetColorAndOpacity(FSlateColor(GetRarityColor(WeaponComp->WeaponLevel)));
+        Text_Rarity->SetText(GetRarityText(WeaponComp->WeaponRarity));
+        Text_Rarity->SetColorAndOpacity(FSlateColor(GetRarityColor(WeaponComp->WeaponRarity)));
         // Note: You can also bind proper stars (images) here if you add UImage bindings.
     }
 
@@ -93,25 +93,34 @@ void UWeaponDetailWidget::AddAffixRow(FString AffixText, FLinearColor Color)
     {
         NewBlock->SetText(FText::FromString(TEXT("| ") + AffixText));
         NewBlock->SetColorAndOpacity(FSlateColor(Color));
-        NewBlock->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 10)); // Example font
+        NewBlock->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 16)); // Example font
         
         VBox_AffixList->AddChild(NewBlock);
     }
 }
 
-FText UWeaponDetailWidget::GetRarityText(int32 Level)
+FText UWeaponDetailWidget::GetRarityText(EWeaponRarity Rarity)
 {
-    if (Level >= 15) return FText::FromString(TEXT("Fantastic"));
-    if (Level >= 10) return FText::FromString(TEXT("Epic"));
-    if (Level >= 5)  return FText::FromString(TEXT("Rare"));
-    return FText::FromString(TEXT("Common"));
+    switch (Rarity)
+    {
+    case EWeaponRarity::Common:     return FText::FromString(TEXT("Common"));
+    case EWeaponRarity::Uncommon:   return FText::FromString(TEXT("Uncommon"));
+    case EWeaponRarity::Rare:       return FText::FromString(TEXT("Rare"));
+    case EWeaponRarity::Epic:       return FText::FromString(TEXT("Epic"));
+    case EWeaponRarity::Fantastic:  return FText::FromString(TEXT("Fantastic"));
+    default:                        return FText::FromString(TEXT("Common"));
+    }
 }
 
-FLinearColor UWeaponDetailWidget::GetRarityColor(int32 Level)
+FLinearColor UWeaponDetailWidget::GetRarityColor(EWeaponRarity Rarity)
 {
-    if (Level >= 15) return FLinearColor(1.0f, 0.5f, 0.0f); // Orange
-    if (Level >= 10) return FLinearColor(0.6f, 0.2f, 1.0f); // Purple
-    if (Level >= 5)  return FLinearColor(0.2f, 0.6f, 1.0f); // Blue
-    return FLinearColor(0.8f, 0.8f, 0.8f); // White/Grey
+    switch (Rarity)
+    {
+    case EWeaponRarity::Common:     return FLinearColor(1.0f, 1.0f, 1.0f); // white
+    case EWeaponRarity::Uncommon:   return FLinearColor(0.2f, 1.0f, 0.2f); // Green
+    case EWeaponRarity::Rare:       return FLinearColor(0.2f, 0.6f, 1.0f); // Blue
+    case EWeaponRarity::Epic:       return FLinearColor(0.6f, 0.2f, 1.0f); // Purple
+    case EWeaponRarity::Fantastic:  return FLinearColor(1.0f, 0.5f, 0.0f); // Gold
+    default:                        return FLinearColor::White;
+    }
 }
-

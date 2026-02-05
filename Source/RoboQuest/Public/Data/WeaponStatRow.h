@@ -30,6 +30,16 @@ enum class EWeaponType : uint8
 	CloseCombat UMETA(DisplayName = "CloseCombat")
 };
 
+UENUM(BlueprintType)
+enum class EWeaponRarity : uint8
+{
+	Common UMETA(DisplayName = "Common"),         // White
+	Uncommon UMETA(DisplayName = "Uncommon"),     // Green
+	Rare UMETA(DisplayName = "Rare"),             // Blue
+	Epic UMETA(DisplayName = "Epic"),             // Purple
+	Fantastic UMETA(DisplayName = "Fantastic"),   // Gold
+};
+
 /**
  * Structure mapping to DT_WeaponStat.json
  */

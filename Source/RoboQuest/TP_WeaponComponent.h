@@ -185,6 +185,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Upgrade")
 	int32 WeaponLevel = 1;
 
+	// Current Weapon Rarity (Independent of Level)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Upgrade")
+	EWeaponRarity WeaponRarity = EWeaponRarity::Common;
+
 	// Apply upgrade: Increase stats and level up
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void UpgradeWeapon();

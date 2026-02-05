@@ -66,6 +66,6 @@ protected:
     void AddAffixRow(FString AffixText, FLinearColor Color = FLinearColor::White);
     
     // Helper to Determine Rarity Text based on Level (Mock logic)
-    FText GetRarityText(int32 Level);
-    FLinearColor GetRarityColor(int32 Level);
+    FText GetRarityText(EWeaponRarity Rarity);
+    FLinearColor GetRarityColor(EWeaponRarity Rarity);
 };
