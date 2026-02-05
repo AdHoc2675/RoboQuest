@@ -87,6 +87,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float DamageMultiplier = 1.0f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float FinalDamage = 15.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
@@ -94,10 +95,22 @@ public:
 
 	// Fire rate (Rounds Per Second)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float RateOfFire = 3.0f;
+	float BaseRateOfFire = 3.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	int32 MaxAmmo = 10;
+	float RateOfFireMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalRateOfFire = 3.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	int32 BaseMaxAmmo = 10;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MaxAmmoMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	int32 FinalMaxAmmo = 10;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float BaseRangeMeter = 10.0f;
@@ -105,21 +118,34 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float RangeMultiplier = 1.0f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float FinalRangeMeter = 10.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float ReloadTime = 1.5f;
-    
+	float BaseReloadTime = 1.5f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float CritDamageMultiplier = 1.5f;
+	float ReloadTimeMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalReloadTime = 1.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float BaseCritDamageMultiplier = 1.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float CritDamageMultiplierBonus = 0.0f;
 
 	/** Cone half-angle for variance while aiming */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
-	float AimVariance = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float BaseAimVariance = 0.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalAimVariance = 0.5f;
 
 	/** Amount of firing recoil to apply to the owner */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
-	float RecoilStrength = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float BaseRecoilStrength = 0.5f;
 
 	// Enum Stats
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
@@ -127,6 +153,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	EWeaponType WeaponType;
+
+	float CurrentSpeedBonus = 0.0f;
+	float LastAppliedSpeedBonus = 0.0f;
 
 	// --- Config ---
 
@@ -144,11 +173,20 @@ public:
 
 	/** Minimum/Base Spread */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
-	float MinSpread = 0.5f;
+	float BaseMinSpread = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float FinalMinSpread = 0.5f;
 
 	/** Maximum Spread */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
-	float MaxSpread = 4.0f;
+	float BaseMaxSpread = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float FinalMaxSpread = 4.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float SpreadMultiplier = 1.0f;
 
 	/** Spread added per shot */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")

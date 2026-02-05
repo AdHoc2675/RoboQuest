@@ -40,7 +40,7 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
     if (Text_Value_FireRate)
     {
         // Display as "6.67/s"
-        FString RateStr = FString::Printf(TEXT("%.2f/s"), WeaponComp->RateOfFire);
+        FString RateStr = FString::Printf(TEXT("%.2f/s"), WeaponComp->BaseRateOfFire);
         Text_Value_FireRate->SetText(FText::FromString(RateStr));
     }
 
@@ -54,7 +54,7 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
     if (Text_Value_Crit)
     {
         // "x1.5"
-        FString CritStr = FString::Printf(TEXT("x%.1f"), WeaponComp->CritDamageMultiplier);
+        FString CritStr = FString::Printf(TEXT("x%.1f"), WeaponComp->BaseCritDamageMultiplier);
         Text_Value_Crit->SetText(FText::FromString(CritStr));
     }
 

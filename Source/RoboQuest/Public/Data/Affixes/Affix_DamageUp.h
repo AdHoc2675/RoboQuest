@@ -32,6 +32,7 @@ public:
 		{
 			// Add 0.2 to the multiplier
 			Weapon->DamageMultiplier += DamageBonusPercent;
+			UE_LOG(LogTemp, Log, TEXT("Affix_DamageUp: New DamageMultiplier = %.2f"), Weapon->DamageMultiplier);
 		}
 	}
 };

@@ -225,7 +225,7 @@ void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
 		WeaponComp->OnAmmoChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdateAmmoState);
 
 		// force update UI immediately upon weapon equip
-		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->MaxAmmo);
+		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->BaseMaxAmmo);
 	}
 }
 

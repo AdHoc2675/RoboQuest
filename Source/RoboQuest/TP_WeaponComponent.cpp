@@ -27,17 +27,17 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 	
 	// Default Fallback values
-	CurrentAmmo = MaxAmmo;
+	CurrentAmmo = BaseMaxAmmo;
     
     bFireInputHeld = false;
 
-	CurrentSpread = MinSpread;
+	CurrentSpread = BaseMinSpread;
 }
 
 void UTP_WeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	CurrentSpread = MinSpread;
+	CurrentSpread = BaseMinSpread;
 }
 
 void UTP_WeaponComponent::UpgradeWeapon()
@@ -48,12 +48,12 @@ void UTP_WeaponComponent::UpgradeWeapon()
 	RecalculateStats();
 
 	// Refill Ammo as a bonus
-	CurrentAmmo = MaxAmmo;
+	CurrentAmmo = BaseMaxAmmo;
 
 	// Notify UI
 	if (OnAmmoChanged.IsBound())
 	{
-		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		OnAmmoChanged.Broadcast(CurrentAmmo, BaseMaxAmmo);
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Upgraded. New Level: %d, New Damage: %f"), WeaponLevel, FinalDamage);
@@ -66,7 +66,7 @@ void UTP_WeaponComponent::AddAffix(TSubclassOf<UWeaponAffix> AffixClass)
 	// Check Max Slots
 	if (CurrentAffixes.Num() >= GetMaxAffixCount())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot add affix: Max slots reached for current rarity."));
+		UE_LOG(LogTemp, Warning, TEXT("UTP_WeaponComponent::Cannot add affix: Max slots reached for current rarity."));
 		return;
 	}
 
@@ -84,11 +84,19 @@ void UTP_WeaponComponent::RecalculateStats()
 	// Reset Modifiers
 	DamageMultiplier = 1.0f;
 	RangeMultiplier = 1.0f;
+	RateOfFireMultiplier = 1.0f;
+	MaxAmmoMultiplier = 1.0f;
+	ReloadTimeMultiplier = 1.0f;
+	SpreadMultiplier = 1.0f;
+	CurrentSpeedBonus = 0.0f;
 
 	// Apply Level Scaling
 	// Example: +10% damage per level
-	DamageMultiplier += (WeaponLevel - 1) * 0.1f;
-	RangeMultiplier += (WeaponLevel - 1) * 0.1f;
+	if (WeaponLevel > 1)
+	{
+		DamageMultiplier += (WeaponLevel - 1) * 0.1f;
+		RangeMultiplier += (WeaponLevel - 1) * 0.1f;
+	}
 
 	// Apply Affix Modifiers
 	for (UWeaponAffix* Affix : CurrentAffixes)
@@ -101,8 +109,42 @@ void UTP_WeaponComponent::RecalculateStats()
 
 	// Calculate Final Stats
 	FinalDamage = BaseDamage * DamageMultiplier; // Update the variable used in logic
+	FinalRangeMeter = BaseRangeMeter * RangeMultiplier;
+	FinalRateOfFire = BaseRateOfFire * RateOfFireMultiplier;
 
-	UE_LOG(LogTemp, Log, TEXT("Stats Recalculated. Multiplier: %f, Final Damage: %f"), DamageMultiplier, FinalDamage);
+	FinalMaxAmmo = FMath::Max(1, FMath::RoundToInt(BaseMaxAmmo * MaxAmmoMultiplier));
+	if (CurrentAmmo > FinalMaxAmmo) CurrentAmmo = FinalMaxAmmo;
+
+	// Avoid divide by zero
+	float SafeReloadSpeed = FMath::Max(0.1f, ReloadTimeMultiplier);
+	FinalReloadTime = BaseReloadTime / SafeReloadSpeed;
+
+	// Lower SpreadMultiplier means more accurate. Higher means less accurate.
+	FinalMinSpread = BaseMinSpread * SpreadMultiplier;
+	FinalMaxSpread = BaseAimVariance * SpreadMultiplier;
+	FinalAimVariance = BaseAimVariance * SpreadMultiplier;
+	if (CurrentSpread < BaseMinSpread) CurrentSpread = BaseMinSpread;
+
+	// Update Speed Bonus on Character
+	if (Character)
+	{
+		if (UStatusComponent* Status = Character->GetStatusComponent())
+		{
+			// Remove previous bonus and add new one
+			// Status->AddSpeed(-LastAppliedSpeedBonus); 
+			// Status->AddSpeed(CurrentSpeedBonus);
+
+			// Or calculate Delta
+			float SpeedDelta = CurrentSpeedBonus - LastAppliedSpeedBonus;
+			if (!FMath::IsNearlyZero(SpeedDelta))
+			{
+				Status->AddSpeed(SpeedDelta);
+				LastAppliedSpeedBonus = CurrentSpeedBonus;
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Stats Recalculated."));
 }
 
 int32 UTP_WeaponComponent::GetMaxAffixCount() const
@@ -126,9 +168,9 @@ void UTP_WeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 	// 1. 탄퍼짐 회복 (사격 중이 아닐 때 혹은 항상)
 	// 목표: MinSpread로 서서히 돌아감
-	if (CurrentSpread > MinSpread)
+	if (CurrentSpread > BaseMinSpread)
 	{
-		CurrentSpread = FMath::FInterpTo(CurrentSpread, MinSpread, DeltaTime, SpreadRecoveryRate);
+		CurrentSpread = FMath::FInterpTo(CurrentSpread, BaseMinSpread, DeltaTime, SpreadRecoveryRate);
 	}
 	
 	// 2. HUD 업데이트
@@ -147,7 +189,7 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 	if (!WeaponDataTable)
 	{
 		// Fallback: If no table, just reset ammo
-		CurrentAmmo = MaxAmmo;
+		CurrentAmmo = BaseMaxAmmo;
 		return;
 	}
 
@@ -161,21 +203,21 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		// Apply Stats from DataTable
 		BaseDamage = Row->Damage;
 		BulletCount = Row->BulletCount;
-		RateOfFire = Row->RateOfFire; // e.g., 5.0 (shots per sec)
-		MaxAmmo = Row->Capacity;
+		BaseRateOfFire = Row->RateOfFire; // e.g., 5.0 (shots per sec)
+		BaseMaxAmmo = Row->Capacity;
 		BaseRangeMeter = Row->RangeMeter;
-		ReloadTime = Row->ReloadTime;
-		CritDamageMultiplier = Row->CritDamage;
+		BaseReloadTime = Row->ReloadTime;
+		BaseCritDamageMultiplier = Row->CritDamage;
 		
 		// Apply Enums
 		AmmoType = Row->AmmoType;
 		WeaponType = Row->WeaponType;
 
 		// Apply Accuracy Stats
-		AimVariance = Row->AimVariance;
-		MinSpread = Row->AimVariance;
+		BaseAimVariance = Row->AimVariance;
+		BaseMinSpread = Row->AimVariance;
 		
-		CurrentSpread = MinSpread;
+		CurrentSpread = BaseMinSpread;
 
 		CurrentAffixes.Empty();
 		for (const TSubclassOf<UWeaponAffix>& AffixClass : Row->DefaultAffixes)
@@ -194,20 +236,17 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		WeaponReloadAnimation = Row->WeaponReloadAnim;
 
 		// Reset State
-		CurrentAmmo = MaxAmmo;
+		CurrentAmmo = BaseMaxAmmo;
 		bIsReloading = false;
 
 		// Notify UI
 		if (OnAmmoChanged.IsBound())
 		{
-			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+			OnAmmoChanged.Broadcast(CurrentAmmo, BaseMaxAmmo);
 		}
 
 		RecalculateStats();
 	}
-
-	FinalDamage = BaseDamage * DamageMultiplier;
-	FinalRangeMeter = BaseRangeMeter * RangeMultiplier;
 
 	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Initialized: %s"), *NewWeaponRowName.ToString());
 }
@@ -222,7 +261,7 @@ void UTP_WeaponComponent::Fire()
 
 	// 2. Cooldown Check (Rate of Fire)
 	double CurrentTime = GetWorld()->GetTimeSeconds();
-	float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
+	float FireDelay = (BaseRateOfFire > 0) ? (1.0f / BaseRateOfFire) : 0.1f;
 	
 	if (CurrentTime - LastFireTime < FireDelay - 0.01f)
 	{
@@ -249,7 +288,7 @@ void UTP_WeaponComponent::Fire()
 	// Notify ammo change UI
 	if (OnAmmoChanged.IsBound())
 	{
-		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		OnAmmoChanged.Broadcast(CurrentAmmo, BaseMaxAmmo);
 	}
 
 	// 5. Fire Logic (Updated: Converging Aim + Spread + Recoil)
@@ -308,16 +347,16 @@ void UTP_WeaponComponent::Fire()
 				
 				if (Projectile)
 				{
-					Projectile->InitializeProjectile(FinalDamage, FinalRangeMeter, CritDamageMultiplier);
+					Projectile->InitializeProjectile(FinalDamage, FinalRangeMeter, BaseCritDamageMultiplier);
 				}
 			}
 
 			// --- D. Apply Recoil ---
-			if (RecoilStrength > 0.0f)
+			if (BaseRecoilStrength > 0.0f)
 			{
 				// Randomize recoil slightly for realism
-				float RecoilPitch = -RecoilStrength * FMath::RandRange(0.4f, 0.6f); // Kick up
-				float RecoilYaw = RecoilStrength * FMath::RandRange(-0.25f, 0.25f);   // Shake left/right
+				float RecoilPitch = -BaseRecoilStrength * FMath::RandRange(0.4f, 0.6f); // Kick up
+				float RecoilYaw = BaseRecoilStrength * FMath::RandRange(-0.25f, 0.25f);   // Shake left/right
 
 				PlayerController->AddPitchInput(RecoilPitch);
 				PlayerController->AddYawInput(RecoilYaw);
@@ -354,7 +393,7 @@ void UTP_WeaponComponent::Fire()
 	}
 
 	// Increase Spread on Fire
-	CurrentSpread = FMath::Min(CurrentSpread + SpreadIncreasePerShot, MaxSpread);
+	CurrentSpread = FMath::Min(CurrentSpread + SpreadIncreasePerShot, BaseMaxSpread);
 }
 
 bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
@@ -415,7 +454,7 @@ bool UTP_WeaponComponent::AttachWeapon(ARoboQuestCharacter* TargetCharacter)
 		// Fallback notify
 		if (OnAmmoChanged.IsBound())
 		{
-			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+			OnAmmoChanged.Broadcast(CurrentAmmo, BaseMaxAmmo);
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("UTP_WeaponComponent::Weapon Attached with no WeaponRowName set."));
@@ -452,7 +491,7 @@ void UTP_WeaponComponent::StartFire()
     bFireInputHeld = true;
 
     double CurrentTime = GetWorld()->GetTimeSeconds();
-    float FireDelay = (RateOfFire > 0) ? (1.0f / RateOfFire) : 0.1f;
+    float FireDelay = (BaseRateOfFire > 0) ? (1.0f / BaseRateOfFire) : 0.1f;
 
     // Ignore if last fire was within FireDelay
     if (CurrentTime - LastFireTime < FireDelay)
@@ -463,7 +502,7 @@ void UTP_WeaponComponent::StartFire()
     Fire();
 
     // Set timer according to rate of fire (automatic fire) 
-    if (RateOfFire > 0.0f)
+    if (BaseRateOfFire > 0.0f)
     {
         GetWorld()->GetTimerManager().SetTimer(AutomaticFireTimer, this, &UTP_WeaponComponent::Fire, FireDelay, true);
     }
@@ -489,7 +528,7 @@ void UTP_WeaponComponent::Reload()
     StopAutomaticFire();
 
 	// Check conditions: Ignore if already reloading or ammo is full
-	if (bIsReloading || CurrentAmmo >= MaxAmmo)
+	if (bIsReloading || CurrentAmmo >= BaseMaxAmmo)
 	{
 		return;
 	}
@@ -526,7 +565,7 @@ void UTP_WeaponComponent::Reload()
 	FTimerHandle ReloadTimerHandle;
 	if (UWorld* World = GetWorld())
 	{
-		World->GetTimerManager().SetTimer(ReloadTimerHandle, this, &UTP_WeaponComponent::FinishReloading, ReloadTime, false);
+		World->GetTimerManager().SetTimer(ReloadTimerHandle, this, &UTP_WeaponComponent::FinishReloading, BaseReloadTime, false);
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Reloading started..."));
@@ -535,12 +574,12 @@ void UTP_WeaponComponent::Reload()
 void UTP_WeaponComponent::FinishReloading()
 {
 	bIsReloading = false;
-	CurrentAmmo = MaxAmmo; // Refill ammo completely
+	CurrentAmmo = BaseMaxAmmo; // Refill ammo completely
     
 	// Notify UI regarding full ammo
 	if (OnAmmoChanged.IsBound())
 	{
-		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+		OnAmmoChanged.Broadcast(CurrentAmmo, BaseMaxAmmo);
 	}
 
     // [Added] Resume Firing if button is still held
