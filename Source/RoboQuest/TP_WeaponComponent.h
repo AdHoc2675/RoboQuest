@@ -203,6 +203,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void UpgradeWeapon();
 
+	// --- Affix System ---
+
+	// List of currently active affix instances
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Affix")
+	TArray<UWeaponAffix*> CurrentAffixes;
+
+	// Add a new affix to the weapon
+	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
+	void AddAffix(TSubclassOf<UWeaponAffix> AffixClass);
+
+	// Clear and re-apply all stats (Base + Level + Affixes)
+	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
+	void RecalculateStats();
+
+	// Get max number of affixes based on current rarity
+	UFUNCTION(BlueprintPure, Category = "Stats|Affix")
+	int32 GetMaxAffixCount() const;
+
+
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

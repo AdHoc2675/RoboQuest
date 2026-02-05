@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "UI/CrosshairWidget.h" 
+#include "Data/WeaponAffix.h"
 #include "WeaponStatRow.generated.h"
 
 /** 
@@ -87,6 +88,10 @@ public:
 	// Weapon Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType = EWeaponType::Assault;
+
+	// Default Affixes that this weapon *always* has (e.g. built-in explosive)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Affix")
+	TArray<TSubclassOf<UWeaponAffix>> DefaultAffixes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Character Anim")
 	UAnimMontage* CharacterFireAnim;

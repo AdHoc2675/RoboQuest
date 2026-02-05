@@ -14,6 +14,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "TimerManager.h" 
+#include "Data/WeaponAffix.h"
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -44,12 +45,7 @@ void UTP_WeaponComponent::UpgradeWeapon()
 	// Increase Weapon Level
 	WeaponLevel++;
 
-	// Increase Damage (e.g., +10% per level)
-	DamageMultiplier = 1.0f + (0.1f * WeaponLevel);
-	FinalDamage = BaseDamage * DamageMultiplier;
-
-	RangeMultiplier = 1.0f + (0.1f * WeaponLevel);
-	FinalRangeMeter = BaseRangeMeter * RangeMultiplier;
+	RecalculateStats();
 
 	// Refill Ammo as a bonus
 	CurrentAmmo = MaxAmmo;
@@ -61,6 +57,66 @@ void UTP_WeaponComponent::UpgradeWeapon()
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Upgraded. New Level: %d, New Damage: %f"), WeaponLevel, FinalDamage);
+}
+
+void UTP_WeaponComponent::AddAffix(TSubclassOf<UWeaponAffix> AffixClass)
+{
+	if (!AffixClass) return;
+
+	// Check Max Slots
+	if (CurrentAffixes.Num() >= GetMaxAffixCount())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot add affix: Max slots reached for current rarity."));
+		return;
+	}
+
+	// Create Instance
+	UWeaponAffix* NewAffix = NewObject<UWeaponAffix>(this, AffixClass);
+	if (NewAffix)
+	{
+		CurrentAffixes.Add(NewAffix);
+		RecalculateStats(); // Re-apply stats immediately
+	}
+}
+
+void UTP_WeaponComponent::RecalculateStats()
+{
+	// Reset Modifiers
+	DamageMultiplier = 1.0f;
+	RangeMultiplier = 1.0f;
+
+	// Apply Level Scaling
+	// Example: +10% damage per level
+	DamageMultiplier += (WeaponLevel - 1) * 0.1f;
+	RangeMultiplier += (WeaponLevel - 1) * 0.1f;
+
+	// Apply Affix Modifiers
+	for (UWeaponAffix* Affix : CurrentAffixes)
+	{
+		if (Affix)
+		{
+			Affix->ApplyStatModifiers(this);
+		}
+	}
+
+	// Calculate Final Stats
+	FinalDamage = BaseDamage * DamageMultiplier; // Update the variable used in logic
+
+	UE_LOG(LogTemp, Log, TEXT("Stats Recalculated. Multiplier: %f, Final Damage: %f"), DamageMultiplier, FinalDamage);
+}
+
+int32 UTP_WeaponComponent::GetMaxAffixCount() const
+{
+	// Rarity determines max slots
+	switch (WeaponRarity)
+	{
+	case EWeaponRarity::Common:    return 1;
+	case EWeaponRarity::Uncommon:  return 2;
+	case EWeaponRarity::Rare:      return 3;
+	case EWeaponRarity::Epic:      return 4;
+	case EWeaponRarity::Fantastic: return 5;
+	default: return 1;
+	}
 }
 
 // Tick 함수 구현
@@ -121,6 +177,12 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		
 		CurrentSpread = MinSpread;
 
+		CurrentAffixes.Empty();
+		for (const TSubclassOf<UWeaponAffix>& AffixClass : Row->DefaultAffixes)
+		{
+			AddAffix(AffixClass);
+		}
+
 		if (Row->WeaponMesh)
 		{
 			SetSkeletalMesh(Row->WeaponMesh);
@@ -140,6 +202,8 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		{
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 		}
+
+		RecalculateStats();
 	}
 
 	FinalDamage = BaseDamage * DamageMultiplier;

@@ -45,13 +45,6 @@ void AWeaponRarityUpgradeBench::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    // Continuously update color based on interacting player or nearby player
-    // For simplicity, check if LastInteractorCharacter is valid (during interaction window)
-    // OR can check nearby players if we want it to glow as you approach.
-    
-    // Let's use LastInteractorCharacter which is set when Interact is called, 
-    // BUT since we want it to change BEFORE clicking E (maybe?), we might need a reference on Trace.
-    // However, sticking to the user request "When holding weapon", utilizing LastInteractTime logic:
     
     if (LastInteractTime > 0.0 && LastInteractorCharacter)
     {

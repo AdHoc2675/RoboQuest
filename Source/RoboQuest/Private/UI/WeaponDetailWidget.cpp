@@ -4,6 +4,7 @@
 #include "RoboQuest/TP_WeaponComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Data/WeaponAffix.h"
 
 void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
 {
@@ -68,24 +69,35 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
     {
         VBox_AffixList->ClearChildren();
 
-        // [Mock] Add dynamic stats based on level
         if (WeaponComp->WeaponLevel > 0)
         {
             // Calculate amplification (e.g. 10% Damage and 5% Range per level)
             const int32 DamageAmp = WeaponComp->WeaponLevel * 10;
             const int32 RangeAmp = WeaponComp->WeaponLevel * 10;
 
-            FString LevelStr = FString::Printf(TEXT("Level %d: Damage +%d%% & Range +%d%%"), 
+            FString LevelStr = FString::Printf(TEXT("Level %d: Damage +%d%% & Range +%d%%"),
                 WeaponComp->WeaponLevel, DamageAmp, RangeAmp);
 
             AddAffixRow(LevelStr, FLinearColor(0.8f, 0.8f, 0.8f)); // Greyish
         }
-        
-        // [Mock] Add a trait based on Weapon Name
-        if (WeaponComp->WeaponRowName.ToString().Contains("Torpedo"))
+
+        // Iterate through actual affixes
+        for (UWeaponAffix* Affix : WeaponComp->CurrentAffixes)
         {
-            AddAffixRow(TEXT("Explosive: Projectiles explode on impact"), FLinearColor(1.0f, 0.8f, 0.2f)); // Orange
-            AddAffixRow(TEXT("Homing: Projectiles seek targets"), FLinearColor::White);
+            if (Affix)
+            {
+                // Format: "| AffixName: Description"
+                FString DisplayText = FString::Printf(TEXT("%s: %s"), *Affix->AffixName.ToString(), *Affix->AffixDescription.ToString());
+                AddAffixRow(DisplayText, Affix->AffixColor);
+            }
+        }
+
+        // Optional: Show empty slots?
+        int32 MaxSlots = WeaponComp->GetMaxAffixCount();
+        int32 UsedSlots = WeaponComp->CurrentAffixes.Num();
+        for (int32 i = 0; i < (MaxSlots - UsedSlots); i++)
+        {
+            AddAffixRow(TEXT("Empty Slot"), FLinearColor(0.2f, 0.2f, 0.2f)); // Dark Grey
         }
     }
 }
@@ -100,7 +112,11 @@ void UWeaponDetailWidget::AddAffixRow(FString AffixText, FLinearColor Color)
     {
         NewBlock->SetText(FText::FromString(TEXT("| ") + AffixText));
         NewBlock->SetColorAndOpacity(FSlateColor(Color));
-        NewBlock->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 16)); // Example font
+
+        FSlateFontInfo FontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 20);
+        FontInfo.OutlineSettings.OutlineSize = 2;
+        FontInfo.OutlineSettings.OutlineColor = FLinearColor::Black;
+        NewBlock->SetFont(FontInfo);
         
         VBox_AffixList->AddChild(NewBlock);
     }
