@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/Image.h"
+#include "Data/WeaponStatRow.h"
 #include "WeaponDetailWidget.generated.h"
 
 class UTP_WeaponComponent;

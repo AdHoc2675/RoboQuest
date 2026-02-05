@@ -4,6 +4,7 @@
 #include "UI/BaseUserHUDWidget.h"
 #include "UI/AbilityDisplayWidget.h"
 #include "UI/WeaponDetailWidget.h"
+#include "Abilities/RoboQuestAbility.h"
 #include "Components/Border.h"
 
 void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP)
