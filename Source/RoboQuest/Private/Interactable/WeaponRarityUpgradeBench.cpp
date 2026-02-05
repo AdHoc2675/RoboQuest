@@ -22,6 +22,22 @@ AWeaponRarityUpgradeBench::AWeaponRarityUpgradeBench()
 void AWeaponRarityUpgradeBench::BeginPlay()
 {
 	Super::BeginPlay();
+
+    if (BenchMesh)
+    {
+        UMaterialInterface* BaseMat = BenchMesh->GetMaterial(EmissionMaterialIndex);
+        if (BaseMat)
+        {
+            DynamicMaterial = BenchMesh->CreateDynamicMaterialInstance(EmissionMaterialIndex, BaseMat);
+            
+            if (DynamicMaterial)
+            {
+                // Initialize Black/Off
+                DynamicMaterial->SetVectorParameterValue(EmissiveColorParamName, FLinearColor::Black);
+                DynamicMaterial->SetVectorParameterValue(BaseColorParamName, FLinearColor::Black);
+            }
+        }
+    }
 }
 
 // Called every frame
@@ -29,9 +45,37 @@ void AWeaponRarityUpgradeBench::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    // Continuously update color based on interacting player or nearby player
+    // For simplicity, check if LastInteractorCharacter is valid (during interaction window)
+    // OR can check nearby players if we want it to glow as you approach.
+    
+    // Let's use LastInteractorCharacter which is set when Interact is called, 
+    // BUT since we want it to change BEFORE clicking E (maybe?), we might need a reference on Trace.
+    // However, sticking to the user request "When holding weapon", utilizing LastInteractTime logic:
+    
+    if (LastInteractTime > 0.0 && LastInteractorCharacter)
+    {
+        UpdateBenchColor(LastInteractorCharacter);
+    }
+    else
+    {
+        // Reset color to default when idle (Optional)
+        if (DynamicMaterial)
+        {
+             // Slowly fade out or reset? For now, just keep last or reset to Idle Color
+             // DynamicMaterial->SetVectorParameterValue(EmissiveColorParamName, FLinearColor::Black);
+        }
+    }
+
 	// Clear HUD text after 3 seconds of showing status result
 	if (LastInteractTime > 0.0 && (GetWorld()->GetTimeSeconds() - LastInteractTime > 3.0f))
 	{
+        if (DynamicMaterial)
+        {
+            // Reset color when interaction 'session' ends
+            DynamicMaterial->SetVectorParameterValue(EmissiveColorParamName, FLinearColor::Black); 
+        }
+
 		if (LastInteractorCharacter)
 		{
 			// Clear the message
@@ -64,6 +108,9 @@ void AWeaponRarityUpgradeBench::Interact_Implementation(AActor* Interactor)
 	LastInteractTime = GetWorld()->GetTimeSeconds();
 	LastInteractorCharacter = Player;
 
+    // Update Color immediately on interaction attempt
+    UpdateBenchColor(Player);
+
 	// 1. Get Components
 	UTP_WeaponComponent* WeaponComp = Player->GetCurrentWeapon();
 	
@@ -95,6 +142,9 @@ void AWeaponRarityUpgradeBench::Interact_Implementation(AActor* Interactor)
 		// Upgrade Logic: Increment Enum
 		EWeaponRarity NextRarity = static_cast<EWeaponRarity>((uint8)CurrentRarity + 1);
 		WeaponComp->WeaponRarity = NextRarity;
+
+        // Update Color for the NEW rarity immediately
+        UpdateBenchColor(Player);
 
 		// Success Message
 		FString SuccessMsg = FString::Printf(TEXT("RARITY UPGRADED!\n-%d Power"), Cost);
@@ -149,5 +199,39 @@ void AWeaponRarityUpgradeBench::UpdateHUDMessage(ARoboQuestCharacter* Player, FS
 			HUD->SetInteractionMessage(NewText, Color);
 		}
 	}
+}
+
+void AWeaponRarityUpgradeBench::UpdateBenchColor(ARoboQuestCharacter* Player)
+{
+    if (!Player || !DynamicMaterial) return;
+    
+    UTP_WeaponComponent* WeaponComp = Player->GetCurrentWeapon();
+    if (WeaponComp)
+    {
+        // Get the deep, rich color
+        FLinearColor RarityColor = GetRarityColor(WeaponComp->WeaponRarity);
+        
+        // 1. Set Base Color (The object's actual surface color)
+        // This ensures it looks colored even without the glow washing it out
+        DynamicMaterial->SetVectorParameterValue(BaseColorParamName, RarityColor);
+
+        // 2. Set Emissive (Glow)
+        // Multiply by Intensity. Too high intensity turns colors white (Bloom).
+        DynamicMaterial->SetVectorParameterValue(EmissiveColorParamName, RarityColor * EmissionIntensity);
+    }
+}
+
+FLinearColor AWeaponRarityUpgradeBench::GetRarityColor(EWeaponRarity Rarity) const
+{
+    // Return deeper, more saturated colors for better visuals
+    switch (Rarity)
+    {
+        case EWeaponRarity::Common:    return FLinearColor(0.2f, 0.2f, 0.2f); // Dark Grey (Not pure white)
+        case EWeaponRarity::Uncommon:  return FLinearColor(0.0f, 1.0f, 0.05f); // Pure Green
+        case EWeaponRarity::Rare:      return FLinearColor(0.0f, 0.2f, 1.0f); // Deep Blue
+        case EWeaponRarity::Epic:      return FLinearColor(0.4f, 0.0f, 1.0f); // Deep Purple
+        case EWeaponRarity::Fantastic: return FLinearColor(1.0f, 0.15f, 0.0f); // Deep Red-Orange
+        default: return FLinearColor::White;
+    }
 }
 

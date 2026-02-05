@@ -38,6 +38,25 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* BenchMesh;
 
+    // Index of the material element to change
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    int32 EmissionMaterialIndex = 1;
+
+    // Parameter name for Emission (Glow)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    FName EmissiveColorParamName = TEXT("EmissiveColor");
+
+    // [New] Parameter name for Base Color (Albedo)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    FName BaseColorParamName = TEXT("BaseColor");
+
+    // [New] Intensity multiplier for the glow. Lower this if it's too white.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    float EmissionIntensity = 5.0f; 
+
+    UPROPERTY()
+    UMaterialInstanceDynamic* DynamicMaterial;
+
 	// Sound to play when upgrade is successful
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	USoundBase* UpgradeSuccessSound;
@@ -60,4 +79,10 @@ private:
 
 	// Helper to update the text display on the Player's HUD
 	void UpdateHUDMessage(ARoboQuestCharacter* Player, FString NewText, FLinearColor Color);
+
+	// Helper to get color from rarity
+	FLinearColor GetRarityColor(EWeaponRarity Rarity) const;
+
+	// Update the mesh emission color
+	void UpdateBenchColor(ARoboQuestCharacter* Player);
 };
