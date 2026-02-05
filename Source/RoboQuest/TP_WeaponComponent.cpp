@@ -44,9 +44,12 @@ void UTP_WeaponComponent::UpgradeWeapon()
 	// Increase Weapon Level
 	WeaponLevel++;
 
-	// Increase Damage (e.g., +20% per level)
-	float DamageMultiplier = 1.2f;
-	Damage *= DamageMultiplier;
+	// Increase Damage (e.g., +10% per level)
+	DamageMultiplier = 1.0f + (0.1f * WeaponLevel);
+	FinalDamage = BaseDamage * DamageMultiplier;
+
+	RangeMultiplier = 1.0f + (0.1f * WeaponLevel);
+	FinalRangeMeter = BaseRangeMeter * RangeMultiplier;
 
 	// Refill Ammo as a bonus
 	CurrentAmmo = MaxAmmo;
@@ -57,7 +60,7 @@ void UTP_WeaponComponent::UpgradeWeapon()
 		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Upgraded. New Level: %d, New Damage: %f"), WeaponLevel, Damage);
+	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Upgraded. New Level: %d, New Damage: %f"), WeaponLevel, FinalDamage);
 }
 
 // Tick 함수 구현
@@ -100,11 +103,11 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		WeaponRowName = NewWeaponRowName;
 
 		// Apply Stats from DataTable
-		Damage = Row->Damage;
+		BaseDamage = Row->Damage;
 		BulletCount = Row->BulletCount;
 		RateOfFire = Row->RateOfFire; // e.g., 5.0 (shots per sec)
 		MaxAmmo = Row->Capacity;
-		RangeMeter = Row->RangeMeter;
+		BaseRangeMeter = Row->RangeMeter;
 		ReloadTime = Row->ReloadTime;
 		CritDamageMultiplier = Row->CritDamage;
 		
@@ -138,6 +141,9 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 			OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
 		}
 	}
+
+	FinalDamage = BaseDamage * DamageMultiplier;
+	FinalRangeMeter = BaseRangeMeter * RangeMultiplier;
 
 	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Initialized: %s"), *NewWeaponRowName.ToString());
 }
@@ -238,7 +244,7 @@ void UTP_WeaponComponent::Fire()
 				
 				if (Projectile)
 				{
-					Projectile->InitializeProjectile(Damage, RangeMeter, CritDamageMultiplier);
+					Projectile->InitializeProjectile(FinalDamage, FinalRangeMeter, CritDamageMultiplier);
 				}
 			}
 

@@ -134,4 +134,3 @@ void AWeaponUpgradeBench::UpdateHUDMessage(ARoboQuestCharacter* Player, FString 
         }
     }
 }
-

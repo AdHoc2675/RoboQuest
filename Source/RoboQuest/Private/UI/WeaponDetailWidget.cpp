@@ -33,7 +33,7 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
     if (Text_Value_Damage)
     {
         // One decimal place (e.g. 30.8)
-        Text_Value_Damage->SetText(FText::AsNumber(WeaponComp->Damage, &FNumberFormattingOptions::DefaultWithGrouping()));
+        Text_Value_Damage->SetText(FText::AsNumber(WeaponComp->FinalDamage, &FNumberFormattingOptions::DefaultWithGrouping()));
     }
 
     if (Text_Value_FireRate)
@@ -46,7 +46,7 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
     if (Text_Value_Range)
     {
         // Assume RangeMeter is the effective range or radius. "100.0m"
-        FString RangeStr = FString::Printf(TEXT("%.1fm"), WeaponComp->RangeMeter);
+        FString RangeStr = FString::Printf(TEXT("%.1fm"), WeaponComp->FinalRangeMeter);
         Text_Value_Range->SetText(FText::FromString(RangeStr));
     }
 
@@ -69,9 +69,16 @@ void UWeaponDetailWidget::UpdateWeaponDetails(UTP_WeaponComponent* WeaponComp)
         VBox_AffixList->ClearChildren();
 
         // [Mock] Add dynamic stats based on level
-        if (WeaponComp->WeaponLevel >= 5)
+        if (WeaponComp->WeaponLevel > 0)
         {
-            AddAffixRow(TEXT("Level 5: Damage +40% & Range +50%"), FLinearColor(0.8f, 0.8f, 0.8f)); // Greyish
+            // Calculate amplification (e.g. 10% Damage and 5% Range per level)
+            const int32 DamageAmp = WeaponComp->WeaponLevel * 10;
+            const int32 RangeAmp = WeaponComp->WeaponLevel * 10;
+
+            FString LevelStr = FString::Printf(TEXT("Level %d: Damage +%d%% & Range +%d%%"), 
+                WeaponComp->WeaponLevel, DamageAmp, RangeAmp);
+
+            AddAffixRow(LevelStr, FLinearColor(0.8f, 0.8f, 0.8f)); // Greyish
         }
         
         // [Mock] Add a trait based on Weapon Name
