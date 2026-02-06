@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/StatusComponent.h"
 #include "RoboQuest/RoboQuestCharacter.h"
+#include "UI/DamageTextWidget.h"
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -35,6 +36,18 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
     {
         StatusComponent2->TakeDamage(ActualDamage);
         
+		// --- [Floating Text Logic] ---
+		if (ActualDamage > 0.0f)
+		{
+			// TODO: Critical Check logic (Need to pass flag via DamageEvent or calculate here)
+			// For now, assume false or simple threshold check (e.g. > 20 damage is critical)
+			// Or check custom damage type.
+			bool bIsCritical = (ActualDamage > 20.0f); // Mock logic
+			
+			ShowFloatingDamage(ActualDamage, bIsCritical);
+		}
+		// -----------------------------
+
 		// If there is an aggro system, set the DamageCauser as the target here
 
         // can add additional reactions to health changes here (e.g., play hurt animations, sounds, etc.)
@@ -129,4 +142,26 @@ void AEnemyBase::SpawnDrops()
             }
         }
     }
+}
+
+void AEnemyBase::ShowFloatingDamage(float Damage, bool bCritical)
+{
+	if (!DamageTextWidgetClass) return;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	// Ensure we have a valid controller
+	if (!PC) return;
+
+	// Create Widget
+	UDamageTextWidget* DamageWidget = CreateWidget<UDamageTextWidget>(PC, DamageTextWidgetClass);
+	if (DamageWidget)
+	{
+		// Set Location (Slightly above the enemy with some horizontal randomness)
+		FVector SpawnLocation = GetActorLocation();
+		SpawnLocation.Z += FMath::RandRange(50.0f, 100.0f);
+		SpawnLocation.Y += FMath::RandRange(-30.0f, 30.0f); // Random horizontal offset
+
+		DamageWidget->PlayDamageText(Damage, SpawnLocation, bCritical);
+		DamageWidget->AddToViewport();
+	}
 }

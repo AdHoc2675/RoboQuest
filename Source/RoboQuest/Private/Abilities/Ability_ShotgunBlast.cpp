@@ -5,6 +5,7 @@
 #include "../RoboQuestProjectile.h"
 #include "RoboQuest/RoboQuestCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SphereComponent.h"
 
 void UAbility_ShotgunBlast::OnActivate_Implementation()
 {
