@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "UI/CrosshairWidget.h" 
+#include "Data/WeaponAffix.h"
 #include "WeaponStatRow.generated.h"
 
 /** 
@@ -28,6 +29,16 @@ enum class EWeaponType : uint8
 	Technology UMETA(DisplayName = "Technology"),
 	Demolition UMETA(DisplayName = "Demolition"), 
 	CloseCombat UMETA(DisplayName = "CloseCombat")
+};
+
+UENUM(BlueprintType)
+enum class EWeaponRarity : uint8
+{
+	Common UMETA(DisplayName = "Common"),         // White
+	Uncommon UMETA(DisplayName = "Uncommon"),     // Green
+	Rare UMETA(DisplayName = "Rare"),             // Blue
+	Epic UMETA(DisplayName = "Epic"),             // Purple
+	Fantastic UMETA(DisplayName = "Fantastic"),   // Gold
 };
 
 /**
@@ -77,6 +88,10 @@ public:
 	// Weapon Type (Enum)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType = EWeaponType::Assault;
+
+	// Default Affixes that this weapon *always* has (e.g. built-in explosive)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Affix")
+	TArray<TSubclassOf<UWeaponAffix>> DefaultAffixes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual|Character Anim")
 	UAnimMontage* CharacterFireAnim;

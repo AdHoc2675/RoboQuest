@@ -82,34 +82,70 @@ public:
 	// --- Weapon Stats (From DataTable) ---
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float Damage = 15.0f;
+	float BaseDamage = 15.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float DamageMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalDamage = 15.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	int32 BulletCount = 1;
 
 	// Fire rate (Rounds Per Second)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float RateOfFire = 3.0f;
+	float BaseRateOfFire = 3.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	int32 MaxAmmo = 10;
+	float RateOfFireMultiplier = 1.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float RangeMeter = 10.0f;
+	float FinalRateOfFire = 3.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float ReloadTime = 1.5f;
-    
+	int32 BaseMaxAmmo = 10;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float CritDamageMultiplier = 1.5f;
+	float MaxAmmoMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	int32 FinalMaxAmmo = 10;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float BaseRangeMeter = 10.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float RangeMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalRangeMeter = 10.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float BaseReloadTime = 1.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float ReloadTimeMultiplier = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalReloadTime = 1.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float BaseCritDamageMultiplier = 1.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float CritDamageMultiplierBonus = 0.0f;
 
 	/** Cone half-angle for variance while aiming */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
-	float AimVariance = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float BaseAimVariance = 0.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float FinalAimVariance = 0.5f;
 
 	/** Amount of firing recoil to apply to the owner */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Recoil")
-	float RecoilStrength = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float BaseRecoilStrength = 0.5f;
 
 	// Enum Stats
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
@@ -117,6 +153,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	EWeaponType WeaponType;
+
+	float CurrentSpeedBonus = 0.0f;
+	float LastAppliedSpeedBonus = 0.0f;
 
 	// --- Config ---
 
@@ -134,11 +173,20 @@ public:
 
 	/** Minimum/Base Spread */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
-	float MinSpread = 0.5f;
+	float BaseMinSpread = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float FinalMinSpread = 0.5f;
 
 	/** Maximum Spread */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
-	float MaxSpread = 4.0f;
+	float BaseMaxSpread = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
+	float FinalMaxSpread = 4.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float SpreadMultiplier = 1.0f;
 
 	/** Spread added per shot */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
@@ -147,8 +195,6 @@ public:
 	/** Spread recovery per second */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
 	float SpreadRecoveryRate = 5.0f;
-
-	// --- Functions ---
 
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
@@ -182,6 +228,41 @@ public:
 	/** Stop automatic fire (Called by Input Completed) */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void StopFire();
+
+	// Current Weapon Level (Starts at 1)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Upgrade")
+	int32 WeaponLevel = 1;
+
+	// Current Weapon Rarity (Independent of Level)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Upgrade")
+	EWeaponRarity WeaponRarity = EWeaponRarity::Common;
+
+	// Apply upgrade: Increase stats and level up
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void UpgradeWeapon();
+
+	// --- Affix System ---
+
+	// List of currently active affix instances
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Affix")
+	TArray<UWeaponAffix*> CurrentAffixes;
+
+	// Add a new affix to the weapon
+	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
+	void AddAffix(TSubclassOf<UWeaponAffix> AffixClass, bool bForce = false);
+
+	// Clears ONLY random affixes (keeps Defaults) and rolls new ones based on Rarity
+	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
+	void RerollRandomAffixes();
+
+	// Clear and re-apply all stats (Base + Level + Affixes)
+	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
+	void RecalculateStats();
+
+	// Get max number of affixes based on current rarity
+	UFUNCTION(BlueprintPure, Category = "Stats|Affix")
+	int32 GetMaxAffixCount() const;
+
 
 public:
 	// Called every frame

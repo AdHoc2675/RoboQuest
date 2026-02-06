@@ -12,7 +12,7 @@ AEnemyBase::AEnemyBase()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
+    StatusComponent2 = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 }
 
 void AEnemyBase::BeginPlay()
@@ -20,9 +20,9 @@ void AEnemyBase::BeginPlay()
 	Super::BeginPlay();
 	
 	// bind to health changed event
-    if (StatusComponent)
+    if (StatusComponent2)
     {
-        StatusComponent->OnHealthChanged.AddDynamic(this, &AEnemyBase::OnHealthChanged);
+        StatusComponent2->OnHealthChanged.AddDynamic(this, &AEnemyBase::OnHealthChanged);
     }
 }
 
@@ -31,9 +31,9 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
     float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	// apply damage to status component
-    if (StatusComponent && IsAlive())
+    if (StatusComponent2 && IsAlive())
     {
-        StatusComponent->TakeDamage(ActualDamage);
+        StatusComponent2->TakeDamage(ActualDamage);
         
 		// If there is an aggro system, set the DamageCauser as the target here
 
@@ -63,9 +63,9 @@ void AEnemyBase::Die()
 
 	// give exp to player
     ARoboQuestCharacter* PlayerCharacter = Cast<ARoboQuestCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
-    if (PlayerCharacter && StatusComponent)
+    if (PlayerCharacter && StatusComponent2)
     {
-        PlayerCharacter->GetStatusComponent()->AddExp(StatusComponent->ExpReward);
+        PlayerCharacter->GetStatusComponent()->AddExp(StatusComponent2->ExpReward);
 	}
 
 	// Disable collisions
@@ -87,20 +87,46 @@ void AEnemyBase::Die()
 
 void AEnemyBase::SpawnDrops()
 {
-    if (!HealingCellClass) return;
+    if (!HealingCellClass || !PowerCellClass) return;
 
-    for (int32 i = 0; i < DropCount; i++)
+    // Healing Cells (Guaranteed drop based on Count)
+    if (HealingCellClass)
     {
-        // Random Spawn Position around the enemy
-        FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 20.0f;
-        SpawnLoc.Z += 50.0f; // Drop from body height
+        for (int32 i = 0; i < DropCount; i++)
+        {
+            // Random Spawn Position around the enemy
+            FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 20.0f;
+            SpawnLoc.Z += 50.0f; // Drop from body height
 
-        FRotator SpawnRot = FMath::VRand().Rotation();
+            FRotator SpawnRot = FMath::VRand().Rotation();
 
-        FActorSpawnParameters Params;
-        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-        Params.Owner = this;
+            FActorSpawnParameters Params;
+            Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            Params.Owner = this;
 
-        GetWorld()->SpawnActor<AActor>(HealingCellClass, SpawnLoc, SpawnRot, Params);
+            GetWorld()->SpawnActor<AActor>(HealingCellClass, SpawnLoc, SpawnRot, Params);
+        }
+    }
+
+    // Power Cells (Probabilistic Drop for Upgrade Currency)
+    if (PowerCellClass)
+    {
+        // Check Probability (0.0 ~ 1.0)
+        if (FMath::FRand() <= PowerDropChance)
+        {
+            for (int32 i = 0; i < PowerDropCount; i++)
+            {
+                FVector SpawnLoc = GetActorLocation() + FMath::VRand() * 25.0f;
+                SpawnLoc.Z += 60.0f; // Drop from body height
+
+                FRotator SpawnRot = FMath::VRand().Rotation();
+
+                FActorSpawnParameters Params;
+                Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+                Params.Owner = this;
+
+                GetWorld()->SpawnActor<AActor>(PowerCellClass, SpawnLoc, SpawnRot, Params);
+            }
+        }
     }
 }

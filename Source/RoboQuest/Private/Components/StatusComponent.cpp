@@ -163,12 +163,47 @@ void UStatusComponent::UpdateNextLevelExp()
 
 }
 
+void UStatusComponent::AddPower(int32 Amount)
+{
+	if (Amount <= 0) return;
+
+	CurrentPowerCellCount += Amount;
+
+	// Broadcast change
+	if (OnPowerChanged.IsBound())
+	{
+		OnPowerChanged.Broadcast(CurrentPowerCellCount);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("UStatusComponent::Power Added: %d, Total: %d"), Amount, CurrentPowerCellCount);
+
+}
+
+bool UStatusComponent::ConsumePower(int32 Amount)
+{
+	if (Amount <= 0) return false;
+
+	if (CurrentPowerCellCount >= Amount)
+	{
+		CurrentPowerCellCount -= Amount;
+
+		// Broadcast change
+		if (OnPowerChanged.IsBound())
+		{
+			OnPowerChanged.Broadcast(CurrentPowerCellCount);
+		}
+		return true;
+	}
+
+	return false;
+}
+
 // --- Enemy Stat ---
 void UStatusComponent::InitializeEnemyStats(FName EnemyRowName, int32 NewLevel)
 {
 	if (!EnemyStatDataTable)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("EnemyStatDataTable is not assigned!"));
+		UE_LOG(LogTemp, Warning, TEXT("UStatusComponent::EnemyStatDataTable is not assigned!"));
 		return;
 	}
 
@@ -191,7 +226,7 @@ void UStatusComponent::InitializeEnemyStats(FName EnemyRowName, int32 NewLevel)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("EnemyStatRow not found for %s"), *EnemyRowName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("UStatusComponent::EnemyStatRow not found for %s"), *EnemyRowName.ToString());
 	}
 }
 

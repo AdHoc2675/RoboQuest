@@ -75,6 +75,8 @@ public:
 public:
 	ARoboQuestCharacter();
 
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	virtual void BeginPlay();
 
@@ -85,6 +87,10 @@ protected:
 	UBaseUserHUDWidget* HUDWidget;
 
 	bool bIsDead = false;
+
+    // Track the currently equipped weapon
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+    UTP_WeaponComponent* CurrentWeapon;
 
 protected:
 	/** Called for movement input */
@@ -100,10 +106,18 @@ protected:
 	UFUNCTION()
 	void OnStatsUpdated(float DefensePercent, float SpeedMultiplier);
 
+	// One-shot interaction (Started)
 	void Interact();
 
 	void UseAbilityQ();
 	void UseAbilityF();
+
+	// Trace to check for interactable objects and update HUD
+	void PerformInteractionCheck();
+
+	// Cache the last seen actpr to minimize UI updates
+	UPROPERTY()
+	AActor* LastLookAtActor;
 
 public:
 	/** Returns Mesh1P subobject **/
@@ -117,6 +131,10 @@ public:
 
 	/** Binds the given weapon component to the HUD */
 	void BindWeaponToHUD(class UTP_WeaponComponent* WeaponComp);
+    
+    // Get the currently equipped weapon
+    UFUNCTION(BlueprintPure, Category = "Weapon")
+    UTP_WeaponComponent* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	/** Returns whether the character is alive */
 	bool IsAlive() const { return !bIsDead; }

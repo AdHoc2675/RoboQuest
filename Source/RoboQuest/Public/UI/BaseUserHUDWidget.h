@@ -10,6 +10,9 @@
 #include "Components/NamedSlot.h"
 #include "BaseUserHUDWidget.generated.h"
 
+class URoboQuestAbility;
+class UWeaponDetailWidget;
+
 /**
  * 
  */
@@ -46,6 +49,12 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SpeedText;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* PowerCellCountText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* InteractionMsgText;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	UBorder* Crosshair_Top;
 
@@ -64,6 +73,19 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UNamedSlot* Slot_AbilityF;
 
+	// Slot specifically for the Weapon Card UI
+	UPROPERTY(meta = (BindWidget))
+	UNamedSlot* Slot_WeaponInfo;
+
+	// Class of the Weapon Detail Widget to spawn
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Weapon")
+	TSubclassOf<UWeaponDetailWidget> WeaponDetailWidgetClass;
+
+	// Cached reference to the spawned widget
+	UPROPERTY(BlueprintReadOnly, Category = "UI|Weapon")
+	UWeaponDetailWidget* ActiveWeaponDetailWidget;
+
+
 	/** Multiplier to convert spread angle to pixel offset */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Crosshair")
 	float SpreadScale = 30.0f;
@@ -81,7 +103,21 @@ public:
 	void UpdatePlayerStats(float Shield, float Speed);
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
+	void UpdatePowerState(int32 CurrentPowerCellCount);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void SetInteractionMessage(FString Message, FLinearColor Color = FLinearColor::White);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateCrosshairSpread(float Spread);
 
 	void AssignAbilityToSlot(UNamedSlot* TargetSlot, URoboQuestAbility* Ability);
+
+	// Initialize the weapon slot with the specific widget class
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void InitializeWeaponSlot(class UTP_WeaponComponent* WeaponComp);
+
+	// Toggle visibility of the weapon detail card
+	UFUNCTION(BlueprintCallable, Category = "UI|Weapon")
+	void SetWeaponDetailVisibility(bool bVisible);
 };

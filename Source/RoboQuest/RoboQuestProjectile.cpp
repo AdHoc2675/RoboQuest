@@ -90,3 +90,20 @@ void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange,
 		CollisionComp->IgnoreActorWhenMoving(GetOwner(), true);
 	}
 }
+
+void ARoboQuestProjectile::SetExtraProperties(bool bInCanPierce, int32 InMaxBounces)
+{
+	bCanPierce = bInCanPierce;
+	MaxBounces = InMaxBounces;
+
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->bShouldBounce = (MaxBounces > 0);
+		// Bounciness setting (e.g. 0.6)
+		if (MaxBounces > 0)
+		{
+			ProjectileMovement->Bounciness = 1.0f;
+			ProjectileMovement->Friction = 0.0f;
+		}
+	}
+}

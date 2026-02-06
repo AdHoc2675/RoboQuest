@@ -3,6 +3,8 @@
 
 #include "UI/BaseUserHUDWidget.h"
 #include "UI/AbilityDisplayWidget.h"
+#include "UI/WeaponDetailWidget.h"
+#include "Abilities/RoboQuestAbility.h"
 #include "Components/Border.h"
 
 void UBaseUserHUDWidget::UpdateHealthState(float CurrentHP, float ScratchHP, float MaxHP)
@@ -80,6 +82,35 @@ void UBaseUserHUDWidget::UpdatePlayerStats(float DefensePercent, float SpeedMult
 	}
 }
 
+// Displays current power cell count as a simple number
+void UBaseUserHUDWidget::UpdatePowerState(int32 CurrentPowerCellCount)
+{
+    if (PowerCellCountText)
+    {
+        // Display strictly as number (e.g. "12")
+        PowerCellCountText->SetText(FText::AsNumber(CurrentPowerCellCount));
+    }
+}
+
+void UBaseUserHUDWidget::SetInteractionMessage(FString Message, FLinearColor Color)
+{
+    if (InteractionMsgText)
+    {
+        InteractionMsgText->SetText(FText::FromString(Message));
+        InteractionMsgText->SetColorAndOpacity(FSlateColor(Color));
+
+        // Optional: Visibility handling
+        if (Message.IsEmpty())
+        {
+            InteractionMsgText->SetVisibility(ESlateVisibility::Hidden);
+        }
+        else
+        {
+            InteractionMsgText->SetVisibility(ESlateVisibility::HitTestInvisible);
+        }
+    }
+}
+
 // Handles crosshair movement directly
 void UBaseUserHUDWidget::UpdateCrosshairSpread(float Spread)
 {
@@ -114,5 +145,52 @@ void UBaseUserHUDWidget::AssignAbilityToSlot(UNamedSlot* TargetSlot, URoboQuestA
 		// 3. Clear the contents of the slot and mount the new widget
         TargetSlot->ClearChildren();
         TargetSlot->AddChild(NewWidget);
+    }
+}
+
+void UBaseUserHUDWidget::InitializeWeaponSlot(UTP_WeaponComponent* WeaponComp)
+{
+    if (!Slot_WeaponInfo) {
+		UE_LOG(LogTemp, Warning, TEXT("BaseUserHUDWidget::InitializeWeaponSlot - Slot_WeaponInfo is null."));
+    }
+
+
+    if (!Slot_WeaponInfo || !WeaponDetailWidgetClass) return;
+
+    // Spawn the widget if it doesn't exist
+    if (!ActiveWeaponDetailWidget)
+    {
+        ActiveWeaponDetailWidget = CreateWidget<UWeaponDetailWidget>(GetWorld(), WeaponDetailWidgetClass);
+    }
+
+    if (ActiveWeaponDetailWidget)
+    {
+        Slot_WeaponInfo->ClearChildren();
+        Slot_WeaponInfo->AddChild(ActiveWeaponDetailWidget);
+
+        // Initial Data Update
+        ActiveWeaponDetailWidget->UpdateWeaponDetails(WeaponComp);
+    }
+}
+
+void UBaseUserHUDWidget::SetWeaponDetailVisibility(bool bVisible)
+{
+    if (Slot_WeaponInfo)
+    {
+        // Simply toggle the visibility of the container slot or the child widget
+        ESlateVisibility NewVisibility = bVisible ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
+
+        // If the widget hasn't been created yet but requested to show, we might want to ensure it's hidden or force update?
+        // Assuming InitializeWeaponSlot is called at least once when Weapon changes.
+
+        if (ActiveWeaponDetailWidget)
+        {
+            ActiveWeaponDetailWidget->SetVisibility(NewVisibility);
+        }
+        else
+        {
+            // If no widget exists, we can't show anything.
+            UE_LOG(LogTemp, Warning, TEXT("BaseUserHUDWidget:: to show WeaponDetail but widget is null."));
+        }
     }
 }

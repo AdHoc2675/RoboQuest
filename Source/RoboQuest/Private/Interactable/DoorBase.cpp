@@ -31,6 +31,18 @@ void ADoorBase::Interact_Implementation(AActor* Interactor)
     UpdateDoorState();
 }
 
+FText ADoorBase::GetInteractionPrompt_Implementation()
+{
+    if (bIsOpen)
+    {
+        return FText::FromString(TEXT("[E] to Close"));
+    }
+    else
+    {
+        return FText::FromString(TEXT("[E] to Open"));
+    }
+}
+
 void ADoorBase::UpdateDoorState()
 {
     if (bIsOpen)

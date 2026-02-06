@@ -42,6 +42,10 @@ ARoboQuestCharacter::ARoboQuestCharacter()
 
 	StatusComponent = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 	AbilityComponent = CreateDefaultSubobject<UPlayerAbilityComponent>(TEXT("AbilityComponent"));
+
+	// Enable Tick
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true; // Ensure it starts ticking
 }
 
 void ARoboQuestCharacter::BeginPlay()
@@ -87,6 +91,12 @@ void ARoboQuestCharacter::BeginPlay()
 
 				// Initial stats application
 				OnStatsUpdated(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
+			
+				// connect power delegate
+				StatusComponent->OnPowerChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdatePowerState);
+
+				// force update initial state
+				HUDWidget->UpdatePowerState(StatusComponent->CurrentPowerCellCount);
 			}
 
 			if (AbilityComponent)
@@ -96,6 +106,14 @@ void ARoboQuestCharacter::BeginPlay()
 			}
 		}
 	}
+}
+
+void ARoboQuestCharacter::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    
+    // Continuously check for interactable objects
+    PerformInteractionCheck();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -116,8 +134,8 @@ void ARoboQuestCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Look);
 
 		// Interact
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ARoboQuestCharacter::Interact);
-
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::Interact);
+		
 		if (AbilityQAction)
 		{
 			EnhancedInputComponent->BindAction(AbilityQAction, ETriggerEvent::Started, this, &ARoboQuestCharacter::UseAbilityQ);
@@ -170,16 +188,25 @@ void ARoboQuestCharacter::Interact()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.5f, 0, 1.0f);
+
 	// Trace for objects in front of camera
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
 		if (AActor* HitActor = HitResult.GetActor())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("RoboQuestCharacter::Trace Hit Actor: %s"), *HitActor->GetName());
+			
 			// Check if actor implements IInteractable interface
 			if (HitActor->Implements<UInteractable>())
 			{
+				UE_LOG(LogTemp, Warning, TEXT("RoboQuestCharacter::Implements Interface! Executing Interact..."));
 				// Cast to interface and call Interact function
 				IInteractable::Execute_Interact(HitActor, this);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("RoboQuestCharacter::Actor does NOT implement Interactable Interface"));
 			}
 		}
 	}
@@ -187,6 +214,9 @@ void ARoboQuestCharacter::Interact()
 
 void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
 {
+	// Update the tracked weapon reference
+	CurrentWeapon = WeaponComp;
+
 	if (HUDWidget && WeaponComp)
 	{
 		// if already bound, may need to unbind first (on weapon swap)
@@ -195,7 +225,7 @@ void ARoboQuestCharacter::BindWeaponToHUD(UTP_WeaponComponent* WeaponComp)
 		WeaponComp->OnAmmoChanged.AddDynamic(HUDWidget, &UBaseUserHUDWidget::UpdateAmmoState);
 
 		// force update UI immediately upon weapon equip
-		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->MaxAmmo);
+		HUDWidget->UpdateAmmoState(WeaponComp->CurrentAmmo, WeaponComp->BaseMaxAmmo);
 	}
 }
 
@@ -243,4 +273,50 @@ void ARoboQuestCharacter::UseAbilityF()
 
 		UE_LOG(LogTemp, Log, TEXT("ARoboQuestCharacter::Ability F Pressed"));
 	}
+}
+
+void ARoboQuestCharacter::PerformInteractionCheck()
+{
+    // Need HUD to display anything
+    if (!HUDWidget) return;
+
+	FVector Start = GetFirstPersonCameraComponent()->GetComponentLocation();
+	FVector End = Start + (GetFirstPersonCameraComponent()->GetForwardVector() * InteractionRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+    
+    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+    AActor* HitActor = bHit ? HitResult.GetActor() : nullptr;
+
+    if (HitActor != LastLookAtActor)
+    {
+        LastLookAtActor = HitActor;
+        
+        FString Message = TEXT("");
+        bool bShowWeaponDetail = false;
+
+        if (HitActor && HitActor->Implements<UInteractable>())
+        {
+            // 1. Get Prompt
+            FText PromptText = IInteractable::Execute_GetInteractionPrompt(HitActor);
+            Message = PromptText.ToString();
+
+            // 2. Check if we should show weapon details
+            bShowWeaponDetail = IInteractable::Execute_ShouldShowWeaponDetail(HitActor);
+        }
+        
+        // Update HUD Prompt
+        HUDWidget->SetInteractionMessage(Message);
+
+        // If showing, ensure data is fresh (Optional, but good if stats changed externally)
+        if (bShowWeaponDetail && CurrentWeapon)
+        {
+             HUDWidget->InitializeWeaponSlot(CurrentWeapon); // Re-refresh data
+        }
+
+		// Update Weapon Detail Visibility
+		HUDWidget->SetWeaponDetailVisibility(bShowWeaponDetail);
+    }
 }
