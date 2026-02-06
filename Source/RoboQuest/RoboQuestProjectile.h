@@ -31,6 +31,7 @@ public:
 
 	/** Returns CollisionComp subobject **/
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
+
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
@@ -46,5 +47,14 @@ public:
 	// Critical damage multiplier
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float CritDamageMultiplier;
+	// Max number of bounces allowed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	int32 MaxBounces = 0;
+	// Can this projectile pierce enemies?
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	bool bCanPierce = false;
+	// Modify stats dynamically
+	UFUNCTION(BlueprintCallable)
+	void SetExtraProperties(bool bInCanPierce, int32 InMaxBounces);
 };
 
