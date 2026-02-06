@@ -5,6 +5,7 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "GameFramework/PlayerController.h"
 
 void UDamageTextWidget::NativeConstruct()
 {
@@ -13,32 +14,65 @@ void UDamageTextWidget::NativeConstruct()
 
 void UDamageTextWidget::PlayDamageText(float Damage, FVector InWorldLocation, bool bIsCritical)
 {
-	// 1. Set Value
+	// 1. Set Value (Visual Setup)
 	if (DamageText)
 	{
 		// Display as integer by removing decimals
 		int32 DamageInt = FMath::RoundToInt(Damage);
 		DamageText->SetText(FText::AsNumber(DamageInt));
 
-		// Change color/scale on Critical hit (Example)
+		// Set Color & Initial Scale
 		if (bIsCritical)
 		{
 			DamageText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.2f, 0.2f, 1.0f))); // Red
-			SetRenderScale(FVector2D(1.5f, 1.5f));
+			StartScale = FVector2D(1.5f, 1.5f);
 		}
 		else
 		{
 			DamageText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))); // White
-			SetRenderScale(FVector2D(1.0f, 1.0f));
+			StartScale = FVector2D(1.0f, 1.0f);
 		}
+
+		TargetScale = StartScale * 0.6f;
+		SetRenderScale(StartScale);
 	}
 
-	// 2. Set Location
+	// 2. Setup Location
 	WorldLocation = InWorldLocation;
-	InitialLocation = InWorldLocation;
 	CurrentLifeTime = 0.0f;
 
-	// Add to Viewport (Safety check, though usually added by caller)
+	// 3. Calculate Distance Scale
+	//    Ideally, we want visual movement on screen to be consistent regardless of distance.
+	//    To achieve this, World Velocity must be proportional to Distance.
+	float DistScale = 1.0f;
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		FVector CameraLoc = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : PC->GetPawn()->GetActorLocation();
+		float Distance = FVector::Dist(CameraLoc, InWorldLocation);
+
+		// Scale = Distance / Reference (e.g., if Dist is 2000 and Ref is 1000, Scale is 2.0)
+		DistScale = Distance / (ReferenceDistance > 0.1f ? ReferenceDistance : 1000.0f);
+		DistScale = FMath::Clamp(DistScale, MinScale, MaxScale);
+	}
+
+	// 4. Initialize Physics with Scaling
+	FVector RandomDir = FMath::VRand();
+	RandomDir.Z = 0.0f; 
+	RandomDir.Normalize();
+	
+	// Apply Scale to Speeds
+	float ScaledHorizontal = HorizontalSpeed * DistScale;
+	float ScaledVertical = InitialVerticalSpeed * DistScale;
+	
+	// Apply Scale to Gravity as well 
+	// (Scaling Gravity ensures the arc shape remains the same visually)
+	AppliedGravity = Gravity * DistScale; 
+
+	// Set Velocity
+	Velocity = RandomDir * FMath::RandRange(ScaledHorizontal * 0.8f, ScaledHorizontal * 1.2f);
+	Velocity.Z = ScaledVertical;
+
+	// Add to Viewport
 	if (!IsInViewport())
 	{
 		AddToViewport();
@@ -51,18 +85,24 @@ void UDamageTextWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 
 	CurrentLifeTime += InDeltaTime;
 
-	// Check lifetime expiration
 	if (CurrentLifeTime >= Duration)
 	{
 		RemoveFromParent();
 		return;
 	}
 
-	// Update World coordinates (Float upwards)
-	// Rise along World Z-axis
-	WorldLocation.Z += FloatSpeed * InDeltaTime;
+	// --- 1. Physics Update (Using AppliedGravity) ---
+	Velocity.Z -= AppliedGravity * InDeltaTime;
+	WorldLocation += Velocity * InDeltaTime;
 
-	// Convert World -> Screen coordinates
+
+	// --- 2. Scale Animation (Shrink) ---
+	float LifeAlpha = CurrentLifeTime / Duration;
+	FVector2D NewScale = FMath::Lerp(StartScale, TargetScale, LifeAlpha);
+	SetRenderScale(NewScale);
+
+
+	// --- 3. Screen Projection ---
 	APlayerController* PC = GetOwningPlayer();
 	if (!PC) return;
 
@@ -71,14 +111,18 @@ void UDamageTextWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 
 	if (bProjected)
 	{
-		// Set Position in Viewport
 		SetPositionInViewport(ScreenPosition);
 		
+		// Fade out logic
 		float FadeStart = Duration * 0.5f;
 		if (CurrentLifeTime > FadeStart)
 		{
 			float Alpha = 1.0f - ((CurrentLifeTime - FadeStart) / (Duration - FadeStart));
 			SetRenderOpacity(Alpha);
+		}
+		else
+		{
+			SetRenderOpacity(1.0f);
 		}
 	}
 }

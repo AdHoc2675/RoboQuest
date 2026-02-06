@@ -26,13 +26,38 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "UI")
 	FVector WorldLocation;
 
-	// Floating speed of the text (in World Units, z-axis)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	float FloatSpeed = 100.0f;
-
 	// Duration to display the text
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	float Duration = 1.0f;
+
+	// --- Physics & Animation Settings ---
+	
+	// Initial upward burst speed (Base Value)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Animation")
+	float InitialVerticalSpeed = 350.0f;
+
+	// Horizontal scatter speed (Base Value)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Animation")
+	float HorizontalSpeed = 120.0f;
+
+	// Downward gravity acceleration (Base Value)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Animation")
+	float Gravity = 490.0f;
+
+	// --- Distance Scaling (New) ---
+
+	// The reference distance where Scale is 1.0. (e.g. 10m = 1000 units)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Animation")
+	float ReferenceDistance = 1000.0f;
+
+	// Minimum scale for very close targets (Prevents text from flying off screen)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Animation")
+	float MinScale = 0.5f;
+
+	// Maximum scale for very far targets (Prevents text from moving too wildly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI|Animation")
+	float MaxScale = 2.5f;
+
 
 	// Initial setup function
 	UFUNCTION(BlueprintCallable, Category = "UI")
@@ -44,5 +69,12 @@ protected:
 
 private:
 	float CurrentLifeTime = 0.0f;
-	FVector InitialLocation;
+	
+	// For physics simulation
+	FVector Velocity;
+	float AppliedGravity; // Scaled gravity
+	
+	// For scaling animation
+	FVector2D StartScale;
+	FVector2D TargetScale;
 };
