@@ -249,7 +249,11 @@ public:
 
 	// Add a new affix to the weapon
 	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
-	void AddAffix(TSubclassOf<UWeaponAffix> AffixClass);
+	void AddAffix(TSubclassOf<UWeaponAffix> AffixClass, bool bForce = false);
+
+	// Clears ONLY random affixes (keeps Defaults) and rolls new ones based on Rarity
+	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
+	void RerollRandomAffixes();
 
 	// Clear and re-apply all stats (Base + Level + Affixes)
 	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")

@@ -38,5 +38,7 @@ public:
 	/** Called when the weapon fires (Optional hook) */
 	virtual void OnFire(UTP_WeaponComponent* Weapon) {}
 
+	// Helper to get all available random affixes
+	static TArray<TSubclassOf<UWeaponAffix>> GetAllRandomAffixes();
 	// Add more hooks as needed: OnReload, OnHit, etc.
 };

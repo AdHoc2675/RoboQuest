@@ -136,6 +136,9 @@ void AWeaponRarityUpgradeBench::Interact_Implementation(AActor* Interactor)
 		EWeaponRarity NextRarity = static_cast<EWeaponRarity>((uint8)CurrentRarity + 1);
 		WeaponComp->WeaponRarity = NextRarity;
 
+		// Reroll affixes for the new Rarity Tier (Replaces old randoms)
+		WeaponComp->RerollRandomAffixes();
+
         // Update Color for the NEW rarity immediately
         UpdateBenchColor(Player);
 

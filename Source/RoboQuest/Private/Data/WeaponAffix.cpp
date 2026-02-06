@@ -2,6 +2,8 @@
 
 #include "Data/WeaponAffix.h"
 #include "RoboQuest/TP_WeaponComponent.h"
+#include "Data/Affixes/Affix_DamageUp.h"
+#include "Data/Affixes/WeaponAffixes_General.h" 
 
 void UWeaponAffix::ApplyStatModifiers(UTP_WeaponComponent* Weapon)
 {
@@ -9,3 +11,18 @@ void UWeaponAffix::ApplyStatModifiers(UTP_WeaponComponent* Weapon)
 	// Override this to modify Weapon->DamageMultiplier, etc.
 }
 
+TArray<TSubclassOf<UWeaponAffix>> UWeaponAffix::GetAllRandomAffixes()
+{
+    static TArray<TSubclassOf<UWeaponAffix>> AffixList;
+    if (AffixList.Num() == 0)
+    {
+        // Add all your created affix classes here
+        AffixList.Add(UAffix_DamageUp::StaticClass());
+        AffixList.Add(UAffix_Swift::StaticClass());
+        AffixList.Add(UAffix_BigMag::StaticClass());
+        AffixList.Add(UAffix_Cadence::StaticClass());
+        AffixList.Add(UAffix_Longshot::StaticClass());
+        AffixList.Add(UAffix_Quickload::StaticClass());
+    }
+    return AffixList;
+}

@@ -59,15 +59,21 @@ void UTP_WeaponComponent::UpgradeWeapon()
 	UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Weapon Upgraded. New Level: %d, New Damage: %f"), WeaponLevel, FinalDamage);
 }
 
-void UTP_WeaponComponent::AddAffix(TSubclassOf<UWeaponAffix> AffixClass)
+void UTP_WeaponComponent::AddAffix(TSubclassOf<UWeaponAffix> AffixClass, bool bForce)
 {
 	if (!AffixClass) return;
 
-	// Check Max Slots
-	if (CurrentAffixes.Num() >= GetMaxAffixCount())
+	// Check Max Slots (Skip check if bForce is true)
+	if (!bForce && CurrentAffixes.Num() >= GetMaxAffixCount())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UTP_WeaponComponent::Cannot add affix: Max slots reached for current rarity."));
+		// UE_LOG(LogTemp, Warning, TEXT("UTP_WeaponComponent::Cannot add affix: Max slots reached."));
 		return;
+	}
+
+	// Check Duplicate (Optional logic: prevent same affix twice)
+	for (UWeaponAffix* Existing : CurrentAffixes)
+	{
+		if (Existing->IsA(AffixClass)) return; // Already has this type
 	}
 
 	// Create Instance
@@ -75,7 +81,79 @@ void UTP_WeaponComponent::AddAffix(TSubclassOf<UWeaponAffix> AffixClass)
 	if (NewAffix)
 	{
 		CurrentAffixes.Add(NewAffix);
-		RecalculateStats(); // Re-apply stats immediately
+		RecalculateStats();
+	}
+}
+
+void UTP_WeaponComponent::RerollRandomAffixes()
+{
+	if (!WeaponDataTable || WeaponRowName.IsNone()) return;
+
+	static const FString ContextString(TEXT("Affix Reroll"));
+	FWeaponStatRow* Row = WeaponDataTable->FindRow<FWeaponStatRow>(WeaponRowName, ContextString);
+
+	if (Row)
+	{
+		// 1. Clear All Affixes first
+		CurrentAffixes.Empty();
+
+		// 2. Re-Add Default Affixes (Protected)
+		for (const TSubclassOf<UWeaponAffix>& AffixClass : Row->DefaultAffixes)
+		{
+			AddAffix(AffixClass, true); // bForce=true allows ignoring slot limits
+		}
+
+		// 3. Roll New Random Affixes based on CURRENT Rarity
+		int32 RaritySlots = GetMaxAffixCount();
+		TArray<TSubclassOf<UWeaponAffix>> Pool = UWeaponAffix::GetAllRandomAffixes();
+
+		// Filter Pool (Optional: Remove affixes that are already in Default)
+		// ...
+
+		for (int32 i = 0; i < RaritySlots; i++)
+		{
+			if (Pool.Num() == 0) break;
+
+			// Pick Random
+			int32 RandIdx = FMath::RandRange(0, Pool.Num() - 1);
+			TSubclassOf<UWeaponAffix> PickedClass = Pool[RandIdx];
+
+			// Simple Duplicate Check against current list
+			// (If we allow duplicate effects, skip this check)
+			bool bDuplicate = false;
+			for (UWeaponAffix* Existing : CurrentAffixes)
+			{
+				if (Existing->IsA(PickedClass))
+				{
+					bDuplicate = true;
+					break;
+				}
+			}
+
+			if (!bDuplicate)
+			{
+				AddAffix(PickedClass, true); // Force add
+			}
+			else
+			{
+				// Retry or just skip? 
+				// For better UX, you might want a while loop to retry finding a non-duplicate.
+				// Here we just skip to avoid infinite loops if pool is small.
+				i--;
+				// Safety break to prevent infinite loop if we can't find any valid affix
+				if (Pool.Num() <= CurrentAffixes.Num()) break;
+			}
+
+			// Remove from local pool so we don't pick the exact same one in this loop
+			// (If duplicate check above failed, we still want to remove it from consideration)
+			// But 'Pool' is local, so removing ensures unique randoms in this batch.
+			// However, CurrentAffixes check covers Defaults too.
+		}
+
+		// 4. Apply changes
+		RecalculateStats();
+
+		UE_LOG(LogTemp, Log, TEXT("UTP_WeaponComponent::Random Affixes Rerolled. Total: %d"), CurrentAffixes.Num());
 	}
 }
 
@@ -219,10 +297,30 @@ void UTP_WeaponComponent::InitializeWeapon(FName NewWeaponRowName)
 		
 		CurrentSpread = BaseMinSpread;
 
+		// reset affixes
 		CurrentAffixes.Empty();
+
+		// add default affixes
 		for (const TSubclassOf<UWeaponAffix>& AffixClass : Row->DefaultAffixes)
 		{
-			AddAffix(AffixClass);
+			AddAffix(AffixClass, true); // bForce = true
+		}
+
+		int32 RaritySlots = GetMaxAffixCount();
+		TArray<TSubclassOf<UWeaponAffix>> Pool = UWeaponAffix::GetAllRandomAffixes();
+
+		for (int32 i = 0; i < RaritySlots; i++)
+		{
+			if (Pool.Num() == 0) break;
+
+			// Pick random
+			int32 RandIdx = FMath::RandRange(0, Pool.Num() - 1);
+			TSubclassOf<UWeaponAffix> PickedClass = Pool[RandIdx];
+
+			AddAffix(PickedClass, true);
+
+			// Remove from pool to avoid duplicates if desired (Optional)
+			Pool.RemoveAt(RandIdx);
 		}
 
 		if (Row->WeaponMesh)
