@@ -152,7 +152,7 @@ void UTP_WeaponComponent::RerollRandomAffixes()
 
 void UTP_WeaponComponent::RecalculateStats()
 {
-	// Reset Modifiers
+	// Reset Modifiers (Base Reset)
 	DamageMultiplier = 1.0f;
 	RangeMultiplier = 1.0f;
 	RateOfFireMultiplier = 1.0f;
@@ -160,6 +160,12 @@ void UTP_WeaponComponent::RecalculateStats()
 	ReloadTimeMultiplier = 1.0f;
 	SpreadMultiplier = 1.0f;
 	CurrentSpeedBonus = 0.0f;
+
+    // Apply Frenzy Buffs (Add them to the base multipliers)
+    // Assuming modifiers are additive percentages (0.1 = +10%)
+    RateOfFireMultiplier += FrenzyFireRateMod;   
+    ReloadTimeMultiplier += FrenzyReloadSpeedMod;
+    CurrentSpeedBonus += FrenzyMoveSpeedMod;
 
 	// Apply Level Scaling
 	// Example: +10% damage per level

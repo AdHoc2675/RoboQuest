@@ -36,8 +36,8 @@ void UAbility_ShotgunBlast::OnActivate_Implementation()
 		ARoboQuestProjectile* Proj = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, SpawnLoc, RandomRot, SpawnParams);
 		if (Proj)
 		{
+			Proj->Tags.Add(FName("Ability_Shotgun"));
 			Proj->CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
-
 			Proj->InitializeProjectile(DamagePerPellet, 15.0f /*Range*/, 1.5f /*Crit*/);
 		}
 	}

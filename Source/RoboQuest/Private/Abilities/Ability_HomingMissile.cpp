@@ -27,7 +27,8 @@ void UAbility_HomingMissile::OnActivate_Implementation()
 		ARoboQuestHomingProjectile* Missile = World->SpawnActor<ARoboQuestHomingProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
 		if (Missile)
 		{
-			Missile->InitializeProjectile(30.0f, 50.0f, 1.5f); // set damage etc. (recommend to make variables)
+			Missile->Tags.Add(FName("Ability_Missile"));
+			Missile->InitializeProjectile(90.0f, 50.0f, 1.5f); // set damage etc. (recommend to make variables)
 			
 			if (TargetComp)
 			{

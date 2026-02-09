@@ -19,6 +19,8 @@ class UPlayerAbilityComponent;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnemyKilledDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossHitByAbilityDelegate);
 
 UCLASS(config=Game)
 class ARoboQuestCharacter : public ACharacter
@@ -71,6 +73,14 @@ public:
 	/** Ability F Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AbilityFAction;
+
+	// Delegate broadcast when an enemy is killed
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnEnemyKilledDelegate OnEnemyKilled;
+
+	// Delegate broadcast when a boss is hit by specific abilities
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnBossHitByAbilityDelegate OnBossHitByAbility;
 
 public:
 	ARoboQuestCharacter();

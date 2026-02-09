@@ -23,6 +23,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UStatusComponent* StatusComponent2;
 
+	// Flag to determine if this enemy is a Boss
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Data")
+	bool bIsBoss = false;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

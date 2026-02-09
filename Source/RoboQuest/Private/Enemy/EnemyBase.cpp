@@ -79,6 +79,12 @@ void AEnemyBase::Die()
     if (PlayerCharacter && StatusComponent2)
     {
         PlayerCharacter->GetStatusComponent()->AddExp(StatusComponent2->ExpReward);
+
+        // Notify player of takedown
+        if (PlayerCharacter->OnEnemyKilled.IsBound())
+        {
+            PlayerCharacter->OnEnemyKilled.Broadcast();
+        }
 	}
 
 	// Disable collisions

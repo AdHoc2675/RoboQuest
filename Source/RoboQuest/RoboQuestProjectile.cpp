@@ -6,6 +6,7 @@
 #include "Components/StatusComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Enemy/EnemyBase.h" // Include EnemyBase to check for friendly fire
+#include "RoboQuestCharacter.h"
 
 ARoboQuestProjectile::ARoboQuestProjectile()
 {
@@ -56,6 +57,24 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 			{
 				Destroy();
 				return;
+			}
+		}
+
+		if (AEnemyBase* Enemy = Cast<AEnemyBase>(OtherActor))
+		{
+			if (Enemy->bIsBoss)
+			{
+				// Check Tags
+				if (Tags.Contains(FName("Ability_Shotgun")) || Tags.Contains(FName("Ability_Missile")))
+				{
+					if (ARoboQuestCharacter* Player = Cast<ARoboQuestCharacter>(GetOwner()))
+					{
+						if (Player->OnBossHitByAbility.IsBound())
+						{
+							Player->OnBossHitByAbility.Broadcast();
+						}
+					}
+				}
 			}
 		}
 
