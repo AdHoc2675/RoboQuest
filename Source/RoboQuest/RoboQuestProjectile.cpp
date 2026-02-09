@@ -20,6 +20,9 @@ ARoboQuestProjectile::ARoboQuestProjectile()
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
 
+    // Ignore collision with other Projectiles to prevent mid-air blocking
+    CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
 	// Set as root component
 	RootComponent = CollisionComp;
 
@@ -78,6 +81,14 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 			}
 		}
 
+		TSubclassOf<UDamageType> DmgType = ProjectileDamageType;
+		if (!DmgType)
+		{
+			DmgType = UDamageType::StaticClass();
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("RoboQuestProjectile::Applying Damage: %.1f Type: %s"), Damage, *DmgType->GetName());
+
 		// Do not directly modify the variables of the other actor (e.g., HP). Use the engine's standard functions instead.
 		UGameplayStatics::ApplyDamage(
 			OtherActor,                     // The actor being hit
@@ -91,11 +102,17 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 	}
 }
 
-void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange, float NewCritMul)
+void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange, float NewCritMul, TSubclassOf<UDamageType> InDamageType)
 {
 	Damage = NewDamage;
 	RangeMeter = NewRange;
 	CritDamageMultiplier = NewCritMul;
+	ProjectileDamageType = InDamageType;
+
+	if (!ProjectileDamageType)
+	{
+		ProjectileDamageType = UDamageType::StaticClass();
+	}
 
 	// Update velocity based on InitialSpeed when initialized
 	if (ProjectileMovement)

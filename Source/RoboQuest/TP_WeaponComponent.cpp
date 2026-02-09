@@ -14,7 +14,9 @@
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "TimerManager.h" 
+#include "GameFramework/DamageType.h"
 #include "Data/WeaponAffix.h"
+#include "Data/Affixes/WeaponAffixes_General.h"
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -107,8 +109,23 @@ void UTP_WeaponComponent::RerollRandomAffixes()
 		int32 RaritySlots = GetMaxAffixCount();
 		TArray<TSubclassOf<UWeaponAffix>> Pool = UWeaponAffix::GetAllRandomAffixes();
 
-		// Filter Pool (Optional: Remove affixes that are already in Default)
-		// ...
+        // Define Elemental Classes for Exclusion Logic
+        TArray<UClass*> ElementalClasses;
+        ElementalClasses.Add(UAffix_Burn::StaticClass());
+        ElementalClasses.Add(UAffix_Cryo::StaticClass());
+        ElementalClasses.Add(UAffix_Shock::StaticClass());
+
+        bool bHasElemental = false;
+
+        // Check defaults for existing elemental (unlikely but safe)
+        for (UWeaponAffix* Existing : CurrentAffixes)
+        {
+            if (ElementalClasses.Contains(Existing->GetClass()))
+            {
+                bHasElemental = true;
+                break;
+            }
+        }
 
 		for (int32 i = 0; i < RaritySlots; i++)
 		{
@@ -118,8 +135,19 @@ void UTP_WeaponComponent::RerollRandomAffixes()
 			int32 RandIdx = FMath::RandRange(0, Pool.Num() - 1);
 			TSubclassOf<UWeaponAffix> PickedClass = Pool[RandIdx];
 
+            // Elemental Exclusion Logic
+            // If PickedClass is Elemental AND we already have one -> Skip/Retry
+            bool bIsPickedElemental = ElementalClasses.Contains(PickedClass);
+
+            if (bIsPickedElemental && bHasElemental)
+            {
+                // We cannot have two elements. Remove from pool and try again this iteration
+                Pool.RemoveAt(RandIdx);
+                i--; // Retry this slot
+                continue;
+            }
+
 			// Simple Duplicate Check against current list
-			// (If we allow duplicate effects, skip this check)
 			bool bDuplicate = false;
 			for (UWeaponAffix* Existing : CurrentAffixes)
 			{
@@ -133,14 +161,26 @@ void UTP_WeaponComponent::RerollRandomAffixes()
 			if (!bDuplicate)
 			{
 				AddAffix(PickedClass, true); // Force add
+                
+                // If we just added an element, mark the flag
+                if (bIsPickedElemental)
+                {
+                    bHasElemental = true;
+                }
 			}
 			else
 			{
-				// Retry or just skip? 
-				i--; 
-                // Safety break to prevent infinite loop
-                if (Pool.Num() <= CurrentAffixes.Num()) break; 
+				i--; // Retry
 			}
+            
+            // Remove from pool anyway to avoid picking same again immediately
+            if (Pool.IsValidIndex(RandIdx))
+            {
+                 Pool.RemoveAt(RandIdx);
+            }
+            
+            // Safety break
+            if (Pool.Num() == 0) break;
 		}
 
 		// 4. Apply changes
@@ -160,6 +200,9 @@ void UTP_WeaponComponent::RecalculateStats()
 	ReloadTimeMultiplier = 1.0f;
 	SpreadMultiplier = 1.0f;
 	CurrentSpeedBonus = 0.0f;
+
+	// Reset Damage Type to Default (Normal)
+	CurrentDamageType = UDamageType::StaticClass();
 
     // Apply Frenzy Buffs (Add them to the base multipliers)
     // Assuming modifiers are additive percentages (0.1 = +10%)
@@ -458,11 +501,11 @@ void UTP_WeaponComponent::Fire()
 
                 // Spawn Projectile
 				ARoboQuestProjectile* Projectile = World->SpawnActor<ARoboQuestProjectile>(ProjectileClass, MuzzleLoc, SpawnRotation, ActorSpawnParams);
-				
+
 				if (Projectile)
 				{
-					// Use Final Stats
-					Projectile->InitializeProjectile(FinalDamage, FinalRangeMeter, BaseCritDamageMultiplier);
+					// Pass CurrentDamageType to Projectile
+					Projectile->InitializeProjectile(FinalDamage, FinalRangeMeter, BaseCritDamageMultiplier, CurrentDamageType);
 				}
 			}
 

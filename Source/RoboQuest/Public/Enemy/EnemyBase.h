@@ -96,5 +96,6 @@ protected:
 	virtual void SpawnDrops();
 
 	// Helper to spawn the widget
-	void ShowFloatingDamage(float Damage, bool bCritical);
+	void ShowFloatingDamage(float Damage, bool bCritical, FLinearColor TextColor = FLinearColor::White);
+
 };

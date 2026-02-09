@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Data/WeaponAffix.h"
 #include "RoboQuest/TP_WeaponComponent.h"
+#include "Data/ElementalDamageTypes.h"
 #include "WeaponAffixes_General.generated.h"
 
 // ----------------------------------------------------------------------
@@ -131,6 +132,78 @@ public:
 		{
             // Speed +20% -> Time = Base / 1.2
 			Weapon->ReloadTimeMultiplier += 0.2f;
+		}
+	}
+};
+
+// ----------------------------------------------------------------------
+// 6. Burn: Deals burn damage (Orange-Red)
+// ----------------------------------------------------------------------
+UCLASS()
+class ROBOQUEST_API UAffix_Burn : public UWeaponAffix
+{
+	GENERATED_BODY()
+public:
+	UAffix_Burn()
+	{
+		AffixName = FText::FromString(TEXT("Burn"));
+		AffixDescription = FText::FromString(TEXT("Converts damage to Fire type"));
+		AffixColor = FLinearColor(1.0f, 0.2f, 0.0f); // Red-Orange
+	}
+
+	virtual void ApplyStatModifiers(UTP_WeaponComponent* Weapon) override
+	{
+		if (Weapon)
+		{
+			Weapon->CurrentDamageType = UDamageTypeBurn::StaticClass();
+		}
+	}
+};
+
+// ----------------------------------------------------------------------
+// 7. Cryo: Deals cryo damage (Sky Blue)
+// ----------------------------------------------------------------------
+UCLASS()
+class ROBOQUEST_API UAffix_Cryo : public UWeaponAffix
+{
+	GENERATED_BODY()
+public:
+	UAffix_Cryo()
+	{
+		AffixName = FText::FromString(TEXT("Cryo"));
+		AffixDescription = FText::FromString(TEXT("Converts damage to Ice type"));
+		AffixColor = FLinearColor(0.2f, 0.8f, 1.0f); // Sky Blue
+	}
+
+	virtual void ApplyStatModifiers(UTP_WeaponComponent* Weapon) override
+	{
+		if (Weapon)
+		{
+			Weapon->CurrentDamageType = UDamageTypeCryo::StaticClass();
+		}
+	}
+};
+
+// ----------------------------------------------------------------------
+// 8. Shock: Deals shock damage (Purple)
+// ----------------------------------------------------------------------
+UCLASS()
+class ROBOQUEST_API UAffix_Shock : public UWeaponAffix
+{
+	GENERATED_BODY()
+public:
+	UAffix_Shock()
+	{
+		AffixName = FText::FromString(TEXT("Shock"));
+		AffixDescription = FText::FromString(TEXT("Converts damage to Electric type"));
+		AffixColor = FLinearColor(0.6f, 0.2f, 1.0f); // Purple
+	}
+
+	virtual void ApplyStatModifiers(UTP_WeaponComponent* Weapon) override
+	{
+		if (Weapon)
+		{
+			Weapon->CurrentDamageType = UDamageTypeShock::StaticClass();
 		}
 	}
 };

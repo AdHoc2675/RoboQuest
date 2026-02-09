@@ -61,7 +61,7 @@ public:
 
 	// Initial setup function
 	UFUNCTION(BlueprintCallable, Category = "UI")
-	void PlayDamageText(float Damage, FVector InWorldLocation, bool bIsCritical);
+	void PlayDamageText(float Damage, FVector InWorldLocation, bool bIsCritical, FLinearColor TextColor = FLinearColor::White);
 
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

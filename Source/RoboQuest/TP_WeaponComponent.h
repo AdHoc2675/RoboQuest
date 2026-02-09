@@ -257,6 +257,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Affix")
 	TArray<UWeaponAffix*> CurrentAffixes;
 
+	// Current Damage Type of the weapon (Normal, Burn, Cryo, Shock, etc.)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Affix")
+	TSubclassOf<UDamageType> CurrentDamageType;
+
 	// Add a new affix to the weapon
 	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")
 	void AddAffix(TSubclassOf<UWeaponAffix> AffixClass, bool bForce = false);

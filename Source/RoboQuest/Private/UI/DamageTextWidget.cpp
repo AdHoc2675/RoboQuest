@@ -12,9 +12,9 @@ void UDamageTextWidget::NativeConstruct()
 	Super::NativeConstruct();
 }
 
-void UDamageTextWidget::PlayDamageText(float Damage, FVector InWorldLocation, bool bIsCritical)
+void UDamageTextWidget::PlayDamageText(float Damage, FVector InWorldLocation, bool bIsCritical, FLinearColor TextColor)
 {
-	// 1. Set Value (Visual Setup)
+	// 1. Set Value
 	if (DamageText)
 	{
 		// Display as integer by removing decimals
@@ -24,12 +24,21 @@ void UDamageTextWidget::PlayDamageText(float Damage, FVector InWorldLocation, bo
 		// Set Color & Initial Scale
 		if (bIsCritical)
 		{
-			DamageText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.2f, 0.2f, 1.0f))); // Red
+            // If TextColor is White (Default), use Crit Red. Otherwise preserve current Elemental Color.
+            if (TextColor == FLinearColor::White)
+            {
+			    DamageText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.2f, 0.2f, 1.0f))); // Red
+            }
+            else
+            {
+                DamageText->SetColorAndOpacity(FSlateColor(TextColor));
+            }
 			StartScale = FVector2D(1.5f, 1.5f);
 		}
 		else
 		{
-			DamageText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f))); // White
+            // Apply passed color
+			DamageText->SetColorAndOpacity(FSlateColor(TextColor));
 			StartScale = FVector2D(1.0f, 1.0f);
 		}
 
