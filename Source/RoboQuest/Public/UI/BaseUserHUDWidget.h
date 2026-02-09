@@ -73,6 +73,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UNamedSlot* Slot_AbilityF;
 
+	UPROPERTY(meta = (BindWidget))
+	UNamedSlot* Slot_AbilityPassive;
+
 	// Slot specifically for the Weapon Card UI
 	UPROPERTY(meta = (BindWidget))
 	UNamedSlot* Slot_WeaponInfo;

@@ -45,6 +45,10 @@ public:
 	UPROPERTY(meta = (BindWidgetOptional))
 	UTextBlock* CooldownText;
 
+	// Text block for displaying stacks (e.g., Frenzy, Ammo, Charges)
+	UPROPERTY(meta = (BindWidgetOptional))
+	UTextBlock* StackText;
+
 	/* The ability currently bound to this widget (Weak Pointer for safety) */
 	TWeakObjectPtr<URoboQuestAbility> BoundAbility;
 };

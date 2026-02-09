@@ -66,6 +66,11 @@ void UAbility_Frenzy::UpdateFrenzyLoop()
     }
 }
 
+int32 UAbility_Frenzy::GetCurrentStackCount() const
+{
+    return FMath::FloorToInt(CurrentStacks);
+}
+
 void UAbility_Frenzy::ApplyBuffs()
 {
     if (!CharacterOwner) return;

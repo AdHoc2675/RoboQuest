@@ -22,6 +22,9 @@ public:
 
 	virtual void InitializeAbility(ARoboQuestCharacter* Owner) override;
 
+	virtual bool HasStacks() const override { return true; }
+	virtual int32 GetCurrentStackCount() const override;
+
     // Hook events here
 	virtual void OnPassiveActivate_Implementation() override;
 
