@@ -103,6 +103,7 @@ void ARoboQuestCharacter::BeginPlay()
 			{
 				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityQ, AbilityComponent->GetAbilityQ());
 				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityF, AbilityComponent->GetAbilityF());
+				HUDWidget->AssignAbilityToSlot(HUDWidget->Slot_AbilityPassive, AbilityComponent->GetAbilityPassive());
 			}
 		}
 	}

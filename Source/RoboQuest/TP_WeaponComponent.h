@@ -196,6 +196,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats|Accuracy")
 	float SpreadRecoveryRate = 5.0f;
 
+	// Dynamic modifiers for Frenzy Ability (Stored here to persist through RecalculateStats)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Buffs")
+	float FrenzyFireRateMod = 0.0f; // Additive (e.g., 0.1 for +10%)
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Buffs")
+	float FrenzyReloadSpeedMod = 0.0f; // Additive (e.g., 0.1 for +10%)
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Buffs")
+	float FrenzyMoveSpeedMod = 0.0f; // Additive (e.g., 0.05 for +5%)
+
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
 
@@ -246,6 +256,10 @@ public:
 	// List of currently active affix instances
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Affix")
 	TArray<UWeaponAffix*> CurrentAffixes;
+
+	// Current Damage Type of the weapon (Normal, Burn, Cryo, Shock, etc.)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats|Affix")
+	TSubclassOf<UDamageType> CurrentDamageType;
 
 	// Add a new affix to the weapon
 	UFUNCTION(BlueprintCallable, Category = "Stats|Affix")

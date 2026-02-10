@@ -18,6 +18,12 @@ void UAbilityDisplayWidget::NativeConstruct()
 	{
 		CooldownText->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+    // Check StackText binding
+    if (StackText)
+    {
+        StackText->SetVisibility(ESlateVisibility::Hidden);
+    }
 }
 
 void UAbilityDisplayWidget::BindAbility(URoboQuestAbility* NewAbility)
@@ -55,6 +61,39 @@ void UAbilityDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 	{
 		return;
 	}
+
+    // Update Stack Display
+    if (BoundAbility->HasStacks())
+    {
+        if (StackText)
+        {
+            int32 Stacks = BoundAbility->GetCurrentStackCount();
+            
+            // Only show if stacks > 0 (Optional preference, usually better to zero-hide or show 0)
+            if (Stacks >= 0)
+            {
+                StackText->SetVisibility(ESlateVisibility::HitTestInvisible);
+                StackText->SetText(FText::AsNumber(Stacks));
+            }
+            else
+            {
+                // Hide if 0
+                StackText->SetVisibility(ESlateVisibility::Hidden);
+                
+                // Or Show 0 (If preferred, uncomment below and comment above)
+                // StackText->SetVisibility(ESlateVisibility::HitTestInvisible);
+                // StackText->SetText(FText::AsNumber(0));
+            }
+        }
+    }
+    else
+    {
+        // Hide if ability doesn't support stacks
+        if (StackText)
+        {
+            StackText->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
 
     // Check cooldown state
 	if (BoundAbility->IsOnCooldown())

@@ -47,6 +47,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ability")
 	float GetCooldownTimeRemaining() const;
 
+	// Returns true if this ability uses stacks (to toggle UI visibility)
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	virtual bool HasStacks() const { return false; }
+
+	// Returns current stack count
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	virtual int32 GetCurrentStackCount() const { return 0; }
+
 public:
 	/** Ability Name */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability Info")

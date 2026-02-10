@@ -6,6 +6,7 @@
 #include "Components/StatusComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Enemy/EnemyBase.h" // Include EnemyBase to check for friendly fire
+#include "RoboQuestCharacter.h"
 
 ARoboQuestProjectile::ARoboQuestProjectile()
 {
@@ -18,6 +19,9 @@ ARoboQuestProjectile::ARoboQuestProjectile()
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
+
+    // Ignore collision with other Projectiles to prevent mid-air blocking
+    CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 
 	// Set as root component
 	RootComponent = CollisionComp;
@@ -59,24 +63,57 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 			}
 		}
 
+		if (AEnemyBase* Enemy = Cast<AEnemyBase>(OtherActor))
+		{
+			if (Enemy->bIsBoss)
+			{
+				// Check Tags
+				if (Tags.Contains(FName("Ability_Shotgun")) || Tags.Contains(FName("Ability_Missile")))
+				{
+					if (ARoboQuestCharacter* Player = Cast<ARoboQuestCharacter>(GetOwner()))
+					{
+						if (Player->OnBossHitByAbility.IsBound())
+						{
+							Player->OnBossHitByAbility.Broadcast();
+						}
+					}
+				}
+			}
+		}
+
+		TSubclassOf<UDamageType> DmgType = ProjectileDamageType;
+		if (!DmgType)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("RoboQuestProjectile::Warning: DamageType is NULL in OnHit! Using Default."));
+			DmgType = UDamageType::StaticClass();
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("RoboQuestProjectile::Applying Damage: %.1f Type: %s"), Damage, *DmgType->GetName());
+
 		// Do not directly modify the variables of the other actor (e.g., HP). Use the engine's standard functions instead.
 		UGameplayStatics::ApplyDamage(
 			OtherActor,                     // The actor being hit
 			Damage,                         // Amount of damage
 			GetInstigatorController(),      // Controller of the instigator (used for kill logs, etc.)
 			this,                           // The damage causer (the projectile itself)
-			UDamageType::StaticClass()      // Damage type (change to fire, explosion, etc. if needed)
+			DmgType      // Damage type (change to fire, explosion, etc. if needed)
 		);
 
 		Destroy();
 	}
 }
 
-void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange, float NewCritMul)
+void ARoboQuestProjectile::InitializeProjectile(float NewDamage, float NewRange, float NewCritMul, TSubclassOf<UDamageType> InDamageType)
 {
 	Damage = NewDamage;
 	RangeMeter = NewRange;
 	CritDamageMultiplier = NewCritMul;
+	ProjectileDamageType = InDamageType;
+
+	if (!ProjectileDamageType)
+	{
+		ProjectileDamageType = UDamageType::StaticClass();
+	}
 
 	// Update velocity based on InitialSpeed when initialized
 	if (ProjectileMovement)

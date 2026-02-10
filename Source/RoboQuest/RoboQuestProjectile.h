@@ -8,6 +8,7 @@
 
 class USphereComponent;
 class UProjectileMovementComponent;
+class UDamageType;
 
 UCLASS(config=Game)
 class ARoboQuestProjectile : public AActor
@@ -36,7 +37,11 @@ public:
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	// Projectile properties
-	void InitializeProjectile(float NewDamage, float NewRange, float NewCritMul);
+	void InitializeProjectile(float NewDamage, float NewRange, float NewCritMul, TSubclassOf<UDamageType> InDamageType = nullptr);
+
+	// The damage type this projectile inflicts
+	UPROPERTY(BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<UDamageType> ProjectileDamageType;
 
 	// Damage dealt by this projectile
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")

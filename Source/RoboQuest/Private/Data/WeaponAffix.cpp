@@ -23,6 +23,9 @@ TArray<TSubclassOf<UWeaponAffix>> UWeaponAffix::GetAllRandomAffixes()
         AffixList.Add(UAffix_Cadence::StaticClass());
         AffixList.Add(UAffix_Longshot::StaticClass());
         AffixList.Add(UAffix_Quickload::StaticClass());
+        AffixList.Add(UAffix_Burn::StaticClass());
+        AffixList.Add(UAffix_Cryo::StaticClass());
+        AffixList.Add(UAffix_Shock::StaticClass());
     }
     return AffixList;
 }

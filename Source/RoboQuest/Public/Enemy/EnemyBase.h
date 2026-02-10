@@ -9,6 +9,7 @@
 #include "EnemyBase.generated.h"
 
 class AHealingCell;
+class UDamageTextWidget;
 
 UCLASS()
 class ROBOQUEST_API AEnemyBase : public ACharacter
@@ -21,6 +22,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UStatusComponent* StatusComponent2;
+
+	// Flag to determine if this enemy is a Boss
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Data")
+	bool bIsBoss = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -68,6 +73,12 @@ protected:
 	UPROPERTY(EditAnywhere, BluePrintReadWrite, Category = "Drops")
 	int32 PowerDropCount = 1;
 
+	// --- UI / Feedback ---
+	
+	// Widget Class to spawn for Floating Damage Numbers
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UDamageTextWidget> DamageTextWidgetClass;
+
 public:	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -83,4 +94,8 @@ protected:
 
 	// Spawns healing cells
 	virtual void SpawnDrops();
+
+	// Helper to spawn the widget
+	void ShowFloatingDamage(float Damage, bool bCritical, FLinearColor TextColor = FLinearColor::White);
+
 };

@@ -5,6 +5,9 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/StatusComponent.h"
 #include "RoboQuest/RoboQuestCharacter.h"
+#include "UI/DamageTextWidget.h"
+#include "Engine/DamageEvents.h"
+#include "Data/ElementalDamageTypes.h"
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -35,6 +38,34 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
     {
         StatusComponent2->TakeDamage(ActualDamage);
         
+		if (ActualDamage > 0.0f)
+		{
+			// bool bIsCritical = (ActualDamage > 20.0f); 
+            bool bIsCritical = false;
+            // Determine Color based on Damage Type
+            FLinearColor DmgColor = FLinearColor::White;
+            if (DamageEvent.DamageTypeClass)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("EnemyBase::TakeDamage Type: %s"), *DamageEvent.DamageTypeClass->GetName());
+
+                if (DamageEvent.DamageTypeClass->IsChildOf(UDamageTypeBurn::StaticClass()))
+                {
+                    DmgColor = FLinearColor(1.0f, 0.2f, 0.0f); // Burn: Orange-Red
+                }
+                else if (DamageEvent.DamageTypeClass->IsChildOf(UDamageTypeCryo::StaticClass()))
+                {
+                    DmgColor = FLinearColor(0.2f, 0.8f, 1.0f); // Cryo: Sky Blue
+                }
+                else if (DamageEvent.DamageTypeClass->IsChildOf(UDamageTypeShock::StaticClass()))
+                {
+                    DmgColor = FLinearColor(0.6f, 0.2f, 1.0f); // Shock: Purple
+                }
+            }
+
+			ShowFloatingDamage(ActualDamage, bIsCritical, DmgColor);
+		}
+		// -----------------------------
+
 		// If there is an aggro system, set the DamageCauser as the target here
 
         // can add additional reactions to health changes here (e.g., play hurt animations, sounds, etc.)
@@ -66,6 +97,12 @@ void AEnemyBase::Die()
     if (PlayerCharacter && StatusComponent2)
     {
         PlayerCharacter->GetStatusComponent()->AddExp(StatusComponent2->ExpReward);
+
+        // Notify player of takedown
+        if (PlayerCharacter->OnEnemyKilled.IsBound())
+        {
+            PlayerCharacter->OnEnemyKilled.Broadcast();
+        }
 	}
 
 	// Disable collisions
@@ -129,4 +166,26 @@ void AEnemyBase::SpawnDrops()
             }
         }
     }
+}
+
+void AEnemyBase::ShowFloatingDamage(float Damage, bool bCritical, FLinearColor TextColor)
+{
+	if (!DamageTextWidgetClass) return;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	// Ensure we have a valid controller
+	if (!PC) return;
+
+	// Create Widget
+	UDamageTextWidget* DamageWidget = CreateWidget<UDamageTextWidget>(PC, DamageTextWidgetClass);
+	if (DamageWidget)
+	{
+		// Set Location (Slightly above the enemy with some horizontal randomness)
+		FVector SpawnLocation = GetActorLocation();
+		SpawnLocation.Z += FMath::RandRange(50.0f, 100.0f);
+		SpawnLocation.Y += FMath::RandRange(-30.0f, 30.0f); // Random horizontal offset
+
+		DamageWidget->PlayDamageText(Damage, SpawnLocation, bCritical, TextColor);
+		DamageWidget->AddToViewport();
+	}
 }
