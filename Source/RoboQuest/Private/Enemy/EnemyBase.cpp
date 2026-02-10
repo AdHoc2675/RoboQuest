@@ -40,7 +40,7 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
         
 		if (ActualDamage > 0.0f)
 		{
-			//bool bIsCritical = (ActualDamage > 20.0f); 
+			// bool bIsCritical = (ActualDamage > 20.0f); 
             bool bIsCritical = false;
             // Determine Color based on Damage Type
             FLinearColor DmgColor = FLinearColor::White;

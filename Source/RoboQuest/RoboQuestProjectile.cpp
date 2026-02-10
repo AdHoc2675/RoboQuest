@@ -84,6 +84,7 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		TSubclassOf<UDamageType> DmgType = ProjectileDamageType;
 		if (!DmgType)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("RoboQuestProjectile::Warning: DamageType is NULL in OnHit! Using Default."));
 			DmgType = UDamageType::StaticClass();
 		}
 
@@ -95,7 +96,7 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 			Damage,                         // Amount of damage
 			GetInstigatorController(),      // Controller of the instigator (used for kill logs, etc.)
 			this,                           // The damage causer (the projectile itself)
-			UDamageType::StaticClass()      // Damage type (change to fire, explosion, etc. if needed)
+			DmgType      // Damage type (change to fire, explosion, etc. if needed)
 		);
 
 		Destroy();
