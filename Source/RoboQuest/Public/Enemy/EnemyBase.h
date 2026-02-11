@@ -11,6 +11,8 @@
 class AHealingCell;
 class UDamageTextWidget;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyDied, AEnemyBase*, DeadEnemy);
+
 UCLASS()
 class ROBOQUEST_API AEnemyBase : public ACharacter
 {
@@ -86,6 +88,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive() const { return !bIsDead; }
+
+	// Enemy Died Event
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnEnemyDied OnEnemyDied;
 
 protected:
 	// bind to health changed event

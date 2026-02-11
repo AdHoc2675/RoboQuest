@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Enemy/EnemySpawnPoint.h"
+#include "Interactable/DoorBase.h"
 #include "CombatZone.generated.h"
 
 class UBoxComponent;
@@ -30,8 +31,17 @@ protected:
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Combat Settings")
     TArray<AEnemySpawnPoint*> SpawnPoints;
 
-    // Has this zone already been triggered?
+	// Doors to lock / unlock when the zone is activated / completed
+    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Combat Settings")
+    TArray<ADoorBase*> LinkedDoors;
+
+	// Doors to open when the zone is completed
+    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Combat Settings")
+    TArray<ADoorBase*> DoorsToOpenOnComplete;
+
     bool bIsActive;
+    bool bIsCompleted = false;
+    int32 AliveEnemyCount = 0;
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,4 +51,10 @@ protected:
 
     // Spawns all enemies for this zone instantly
     void ActivateZone();
+
+
+    UFUNCTION()
+    void OnEnemyKilled(AEnemyBase* DeadEnemy);
+
+    void CompleteZone();
 };

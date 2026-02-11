@@ -23,6 +23,13 @@ ADoorBase::ADoorBase()
 
 void ADoorBase::Interact_Implementation(AActor* Interactor)
 {
+
+    if (bIsLocked)
+    {
+        // return FText::FromString(TEXT("Locked"));
+        return;
+    }
+
     // Toggle state
     bIsOpen = !bIsOpen;
 
@@ -88,3 +95,19 @@ void ADoorBase::UpdateDoorState()
     }
 }
 
+void ADoorBase::SetLocked(bool bLocked)
+{
+    bIsLocked = bLocked;
+
+    // 잠글 때 자동으로 닫히게 하려면:
+    if (bIsLocked && bIsOpen)
+    {
+        SetDoorState(false);
+    }
+}
+
+void ADoorBase::SetDoorState(bool bOpen)
+{
+    bIsOpen = bOpen;
+    UpdateDoorState();
+}

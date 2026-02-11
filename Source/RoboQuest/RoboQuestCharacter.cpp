@@ -85,7 +85,7 @@ void ARoboQuestCharacter::BeginPlay()
 
 				// character physics update
 				StatusComponent->OnStatsChanged.AddDynamic(this, &ARoboQuestCharacter::OnStatsUpdated);
-
+             
 				// Force update initial state
 				HUDWidget->UpdatePlayerStats(StatusComponent->DefenseMultiplier, StatusComponent->SpeedMultiplier);
 

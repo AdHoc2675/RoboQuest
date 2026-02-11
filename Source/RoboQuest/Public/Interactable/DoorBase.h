@@ -37,6 +37,9 @@ protected:
 
     bool bIsOpen;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+    bool bIsLocked = false;
+
 public:
     // Implementation of the Interact method from IInteractable
     virtual void Interact_Implementation(AActor* Interactor) override;
@@ -45,4 +48,12 @@ public:
 
     // Helper to handle collision handling
     void UpdateDoorState();
+
+	// Lock or unlock the door
+    UFUNCTION(BlueprintCallable, Category = "Door")
+    void SetLocked(bool bLocked);
+
+	// Open or close the door
+    UFUNCTION(BlueprintCallable, Category = "Door")
+    void SetDoorState(bool bOpen);
 };

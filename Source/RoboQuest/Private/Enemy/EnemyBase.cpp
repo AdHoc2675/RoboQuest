@@ -118,6 +118,11 @@ void AEnemyBase::Die()
     // Detach controller
     DetachFromControllerPendingDestroy();
 
+    if (OnEnemyDied.IsBound())
+    {
+        OnEnemyDied.Broadcast(this);
+    }
+
     // Destroy actor after a delay (set LifeSpan)
     SetLifeSpan(5.0f); 
 }

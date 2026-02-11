@@ -84,11 +84,8 @@ void ARoboQuestProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		TSubclassOf<UDamageType> DmgType = ProjectileDamageType;
 		if (!DmgType)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("RoboQuestProjectile::Warning: DamageType is NULL in OnHit! Using Default."));
 			DmgType = UDamageType::StaticClass();
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("RoboQuestProjectile::Applying Damage: %.1f Type: %s"), Damage, *DmgType->GetName());
 
 		// Do not directly modify the variables of the other actor (e.g., HP). Use the engine's standard functions instead.
 		UGameplayStatics::ApplyDamage(
