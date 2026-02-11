@@ -3,13 +3,12 @@
 #include "Enemy/CombatZone.h"
 #include "Components/BoxComponent.h"
 #include "RoboQuest/RoboQuestCharacter.h"
-#include "Interactable/DoorBase.h"
+#include "Interactable/SlidingDoor.h"
 
 // Sets default values
 ACombatZone::ACombatZone()
 {
-
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.
 	PrimaryActorTick.bCanEverTick = false;
 
 	bIsActive = false;
@@ -35,7 +34,6 @@ void ACombatZone::BeginPlay()
 
 void ACombatZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Check if triggered by player and not already active
 	if (!bIsActive && OtherActor && OtherActor->IsA(ARoboQuestCharacter::StaticClass()))
 	{
 		ActivateZone();
@@ -49,8 +47,8 @@ void ACombatZone::ActivateZone()
 	bIsActive = true;
 	AliveEnemyCount = 0;
 
-	// Lock all linked doors
-	for (ADoorBase* Door : LinkedDoors)
+	// Lock all linked Sliding Doors
+	for (ASlidingDoor* Door : LinkedDoors)
 	{
 		if (Door) Door->SetLocked(true);
 	}
@@ -69,11 +67,7 @@ void ACombatZone::ActivateZone()
 		}
 	}
 
-	// Additional Logic:
-	// - Lock doors
-	// - Start background music
-	// - Notify GameMode
-
+    // Immediate complete if no enemies spawned
 	if (AliveEnemyCount == 0)
 	{
 		CompleteZone();
@@ -95,19 +89,16 @@ void ACombatZone::CompleteZone()
 	bIsActive = false;
 	bIsCompleted = true;
 
-	// Unlock all linked doors
-	for (ADoorBase* Door : LinkedDoors)
+	// Unlock all linked Sliding Doors
+	for (ASlidingDoor* Door : LinkedDoors)
 	{
 		if (Door) Door->SetLocked(false);
 	}
-	// Open specific doors if any
-	for (ADoorBase* Door : DoorsToOpenOnComplete)
+	// Open specific Sliding Doors if any
+	for (ASlidingDoor* Door : DoorsToOpenOnComplete)
 	{
 		if (Door) Door->SetDoorState(true);
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Combat Zone Cleared!"));
-	// Additional Logic:
-	// - Stop background music
-	// - Notify GameMode
 }

@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Enemy/EnemyBase.h" // Include EnemyBase to check for friendly fire
 #include "RoboQuestCharacter.h"
+#include "NiagaraComponent.h"
 
 ARoboQuestProjectile::ARoboQuestProjectile()
 {
@@ -19,6 +20,9 @@ ARoboQuestProjectile::ARoboQuestProjectile()
 	// Players can't walk on it
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
+
+	TrailFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TrailFX"));
+	TrailFXComponent->SetupAttachment(RootComponent);
 
     // Ignore collision with other Projectiles to prevent mid-air blocking
     CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);

@@ -9,6 +9,7 @@
 class USphereComponent;
 class UProjectileMovementComponent;
 class UDamageType;
+class UNiagaraComponent;
 
 UCLASS(config=Game)
 class ARoboQuestProjectile : public AActor
@@ -17,6 +18,10 @@ class ARoboQuestProjectile : public AActor
 
 public:
 	ARoboQuestProjectile();
+
+	/** Niagara Trail Component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	UNiagaraComponent* TrailFXComponent;
 
 	/** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category=Projectile)

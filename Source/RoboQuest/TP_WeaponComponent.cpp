@@ -7,7 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h" // Required for VRandCone and Math functions
+#include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Animation/AnimInstance.h"
@@ -17,6 +17,8 @@
 #include "GameFramework/DamageType.h"
 #include "Data/WeaponAffix.h"
 #include "Data/Affixes/WeaponAffixes_General.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -547,6 +549,35 @@ void UTP_WeaponComponent::Fire()
 		if (WeaponAnimInstance != nullptr)
 		{
 			WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
+		}
+	}
+
+	// 
+	if (MuzzleFlashFX)
+	{
+		if (DoesSocketExist(TEXT("Muzzle")))
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				MuzzleFlashFX,
+				this,
+				TEXT("Muzzle"),
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::SnapToTarget,
+				true // Auto Destroy
+			);
+		}
+		else
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				MuzzleFlashFX,
+				this,
+				NAME_None,
+				MuzzleOffset,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true
+			);
 		}
 	}
 

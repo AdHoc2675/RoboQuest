@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Enemy/EnemySpawnPoint.h"
-#include "Interactable/DoorBase.h"
+#include "Interactable/SlidingDoor.h"
 #include "CombatZone.generated.h"
 
 class UBoxComponent;
@@ -31,13 +31,13 @@ protected:
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Combat Settings")
     TArray<AEnemySpawnPoint*> SpawnPoints;
 
-	// Doors to lock / unlock when the zone is activated / completed
+	// Doors to lock / unlock (Using ASlidingDoor now)
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Combat Settings")
-    TArray<ADoorBase*> LinkedDoors;
+    TArray<ASlidingDoor*> LinkedDoors;
 
-	// Doors to open when the zone is completed
+	// Doors to open when completed
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Combat Settings")
-    TArray<ADoorBase*> DoorsToOpenOnComplete;
+    TArray<ASlidingDoor*> DoorsToOpenOnComplete;
 
     bool bIsActive;
     bool bIsCompleted = false;
@@ -51,7 +51,6 @@ protected:
 
     // Spawns all enemies for this zone instantly
     void ActivateZone();
-
 
     UFUNCTION()
     void OnEnemyKilled(AEnemyBase* DeadEnemy);
