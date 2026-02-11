@@ -50,6 +50,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Settings")
     bool bIsLocked;
 
+    // Sound played when opening starts
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+    USoundBase* OpenSound;
+
+    // Sound played when closing starts
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+    USoundBase* CloseSound;
+
     // --- IInteractable Interface ---
 
     virtual void Interact_Implementation(AActor* Interactor) override;

@@ -2,6 +2,7 @@
 
 #include "Interactable/SlidingDoor.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ASlidingDoor::ASlidingDoor()
 {
@@ -99,16 +100,31 @@ void ASlidingDoor::SetLocked(bool bLockedState)
 
 void ASlidingDoor::SetDoorState(bool bOpenState)
 {
-    bIsOpen = bOpenState;
+    if (bIsOpen != bOpenState)
+    {
+        bIsOpen = bOpenState;
 
-    if (bIsOpen)
-    {
-        // Calculate target based on local offset
-        TargetRelativeLocation = ClosedRelativeLocation + OpenOffset;
-    }
-    else
-    {
-        // Return to original
-        TargetRelativeLocation = ClosedRelativeLocation;
+        if (bIsOpen)
+        {
+            // Open Action
+            TargetRelativeLocation = ClosedRelativeLocation + OpenOffset;
+
+            // Play Open Sound
+            if (OpenSound)
+            {
+                UGameplayStatics::PlaySoundAtLocation(this, OpenSound, GetActorLocation());
+            }
+        }
+        else
+        {
+            // Close Action
+            TargetRelativeLocation = ClosedRelativeLocation;
+
+            // Play Close Sound
+            if (CloseSound)
+            {
+                UGameplayStatics::PlaySoundAtLocation(this, CloseSound, GetActorLocation());
+            }
+        }
     }
 }

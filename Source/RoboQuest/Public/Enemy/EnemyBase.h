@@ -33,23 +33,25 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
-	//UEnemyHealthComponent* Health;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
-	//UEnemyTargetComponent* Target;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
-	//UEnemyDropComponent* Drop;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Components")
-	//UEnemyWeaponComponent* Weapon;
-
-	//// --- Data ---
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Data")
-	//UEnemyArchetypeDataAsset* Archetype;
-
 	bool bIsDead = false;
+
+	// --- Audio ---
+
+	// Sound played when this enemy fires a weapon
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* ShootSound;
+
+	// Sound played when taking damage
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* HitSound;
+
+	// Sound played when dying
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundBase* DeathSound;
+
+	// Helper function to play shoot sound (called by subclasses)
+	UFUNCTION(BlueprintCallable, Category = "Audio")
+	void PlayShootSound();
 
 	// --- Drops ---
 	

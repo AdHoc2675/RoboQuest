@@ -47,7 +47,7 @@ void AEnemyPodBase::FindTarget()
 		else
 		{
 			CurrentTarget = nullptr;
-		}
+		}	
 	}
 }
 
