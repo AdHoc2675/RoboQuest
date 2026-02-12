@@ -50,9 +50,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Loading")
 	void OpenLevelWithFakeLoading(FName LevelName, float FakeDuration = 10.0f);
 
+	UFUNCTION(BlueprintCallable, Category = "Loading")
+	void FinishLoading(); // Public으로 변경 (위젯에서 호출)
+
 protected:
 	void UpdateLoadingProgress();
-	void FinishLoading();
 
 private:
 	UPROPERTY()

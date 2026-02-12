@@ -9,7 +9,8 @@
 
 class UImage;
 class UTextBlock;
-class UCircularThrobber; // Or just a generic widget for the spinner
+class UWidget;
+class USoundBase;
 
 /**
  * C++ Logic for the Loading Screen Widget
@@ -36,7 +37,46 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* TipDescText;
 
-	// Sets the visual data for the widget
+	// Panel showing "Loading..." text and throbber (Visible during loading)
+	UPROPERTY(meta = (BindWidget))
+	UWidget* LoadingIndicatorPanel;
+
+	// Panel showing "Press any key to continue" (Visible when finished)
+	UPROPERTY(meta = (BindWidget))
+	UWidget* PressKeyPanel;
+
+	// Background Music to loop during loading
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* LoadingBGM;
+
+	// Sound effect to play when loading finishes (Ready state)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* LoadingCompleteSound;
+
+	// Sets the visual data and starts BGM
 	UFUNCTION(BlueprintCallable, Category = "Loading")
 	void UpdatePresentation(const FLevelLoadingData& Data);
+
+	// Called by GameInstance when the fake loading timer finishes
+	UFUNCTION(BlueprintCallable, Category = "Loading")
+	void SetLoadingComplete();
+
+protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	
+	// Handle input to proceed
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+private:
+	// Tracks if loading is finished and waiting for input
+	bool bIsLoadingComplete = false;
+
+	// Audio Component for BGM control
+	UPROPERTY()
+	UAudioComponent* BGMComponent;
+
+	// Function to trigger level transition
+	void ProceedToLevel();
 };

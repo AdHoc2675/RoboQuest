@@ -54,14 +54,20 @@ void URoboQuestGameInstance::UpdateLoadingProgress()
 {
 	CurrentLoadingTime += 0.1f;
 
-	// If you want a progress bar, you can call a function on CurrentLoadingWidget here
 	// float Progress = FMath::Clamp(CurrentLoadingTime / TargetLoadingTime, 0.0f, 1.0f);
 	
 	// Finish when time is up
 	if (CurrentLoadingTime >= TargetLoadingTime)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(LoadingTimerHandle);
-		FinishLoading();
+
+		if (URoboQuestLoadingWidget* LoadingWidget = Cast<URoboQuestLoadingWidget>(CurrentLoadingWidget))
+		{
+			LoadingWidget->SetLoadingComplete();
+		}
+		else {
+			FinishLoading();
+		}
 	}
 }
 
