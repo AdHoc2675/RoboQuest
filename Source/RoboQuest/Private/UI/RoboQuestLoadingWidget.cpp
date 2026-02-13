@@ -6,6 +6,7 @@
 #include "Components/Widget.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/AmbientSound.h"
 #include "System/RoboQuestGameInstance.h"
 
 void URoboQuestLoadingWidget::NativeConstruct()
@@ -37,6 +38,19 @@ void URoboQuestLoadingWidget::UpdatePresentation(const FLevelLoadingData& Data)
 	if (LoadingIndicatorPanel) LoadingIndicatorPanel->SetVisibility(ESlateVisibility::Visible);
 	if (PressKeyPanel) PressKeyPanel->SetVisibility(ESlateVisibility::Hidden);
 
+	TArray<AActor*> AmbientSounds;
+	UGameplayStatics::GetAllActorsOfClass(this, AAmbientSound::StaticClass(), AmbientSounds);
+	for (AActor* Actor : AmbientSounds)
+	{
+		if (AAmbientSound* Amb = Cast<AAmbientSound>(Actor))
+		{
+			if (UAudioComponent* Audio = Amb->GetAudioComponent())
+			{
+				// Fade out over 0.5 seconds
+				Audio->FadeOut(0.5f, 0.0f);
+			}
+		}
+	}
 
 	if (LoadingBGM)
 	{
@@ -116,7 +130,7 @@ void URoboQuestLoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	TotalTime += InDeltaTime;
 
 	// Far Background Move (Slow)
-	// Moves Left (-X) at 15 pixels/sec
+	// Moves Left (-X)
 	if (FarBackgroundImage)
 	{
 		float FarSpeed = -80.0f;
@@ -130,13 +144,13 @@ void URoboQuestLoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	}
 
 	// Main Background Move (Faster Parallax)
-	// Moves Left (-X) at 40 pixels/sec
+	// Moves Left (-X)
 	if (BackgroundImage)
 	{
 		float BgSpeed = -300.0f;
 		FVector2D NewPos = BackgroundImage->GetRenderTransform().Translation;
 		NewPos.X += BgSpeed * InDeltaTime;
-
+		
 		BackgroundImage->SetRenderTranslation(NewPos);
 	}
 
@@ -144,7 +158,7 @@ void URoboQuestLoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	// Uses Sin wave physics: Amplitude * Sin(Time * Frequency)
 	if (BusImage)
 	{
-		float Amplitude = 10.0f; // Pixel offset range (up 10, down 10)
+		float Amplitude = 10.0f; // Pixel offset range
 		float Frequency = 1.0f;  // Speed of bobbing
 
 		float YOffset = FMath::Sin(TotalTime * Frequency) * Amplitude;
