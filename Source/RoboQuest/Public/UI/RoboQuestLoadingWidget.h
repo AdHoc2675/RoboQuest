@@ -21,9 +21,22 @@ class ROBOQUEST_API URoboQuestLoadingWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	// Background Image component
+	// Image
+	// -------------------------------------------------------------
+
+	// The furthest background (Sky/Mountains/Buildings) - Moves slowly
+	UPROPERTY(meta = (BindWidgetOptional))
+	UImage* FarBackgroundImage;
+
+	// The main background (Landscape) - Moves faster
 	UPROPERTY(meta = (BindWidget))
 	UImage* BackgroundImage;
+
+	// The Bus/Character - Bobs up and down
+	UPROPERTY(meta = (BindWidgetOptional))
+	UImage* BusImage;
+
+	// -------------------------------------------------------------
 
 	// Large text for Level Name (Top Left)
 	UPROPERTY(meta = (BindWidget))
@@ -64,7 +77,8 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-	
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	// Handle input to proceed
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -73,10 +87,11 @@ private:
 	// Tracks if loading is finished and waiting for input
 	bool bIsLoadingComplete = false;
 
-	// Audio Component for BGM control
-	UPROPERTY()
-	UAudioComponent* BGMComponent;
+	// New flag to prevent multiple triggers
+	bool bHasProceeded = false;
 
 	// Function to trigger level transition
 	void ProceedToLevel();
+
+	float TotalTime = 0.0f;
 };

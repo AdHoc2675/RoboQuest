@@ -12,7 +12,7 @@ void URoboQuestLoadingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	// Ensure widget can receive input
+	// Ensure widget can receive input (Important for NativeOnKeyDown)
 	bIsFocusable = true;
 }
 
@@ -33,19 +33,19 @@ void URoboQuestLoadingWidget::UpdatePresentation(const FLevelLoadingData& Data)
 
 	// 2. Reset State
 	bIsLoadingComplete = false;
+	bHasProceeded = false;
 	if (LoadingIndicatorPanel) LoadingIndicatorPanel->SetVisibility(ESlateVisibility::Visible);
 	if (PressKeyPanel) PressKeyPanel->SetVisibility(ESlateVisibility::Hidden);
 
-	// 3. Play BGM
+
 	if (LoadingBGM)
 	{
-		if (!BGMComponent)
-		{
-			BGMComponent = UGameplayStatics::SpawnSound2D(this, LoadingBGM, 1.0f, 1.0f, 0.0f, nullptr, true, true);
-		}
+		UGameplayStatics::PlaySound2D(this, LoadingBGM);
+		
 	}
 	
-	// Set Focus to capture keyboard input later
+	// Force focus to capture keyboard input
+	// Using a slight delay or calling in Tick is sometimes safer, but this usually works if widget is in viewport
 	SetKeyboardFocus();
 }
 
@@ -53,29 +53,36 @@ void URoboQuestLoadingWidget::SetLoadingComplete()
 {
 	bIsLoadingComplete = true;
 
-	// 1. Swap UI
+	// Swap UI
 	if (LoadingIndicatorPanel) LoadingIndicatorPanel->SetVisibility(ESlateVisibility::Hidden);
 	if (PressKeyPanel) PressKeyPanel->SetVisibility(ESlateVisibility::Visible);
 
-	// 2. Play Complete Sound
+	// Play Complete Sound
 	if (LoadingCompleteSound)
 	{
+		// Spawn/Play sound securely
 		UGameplayStatics::PlaySound2D(this, LoadingCompleteSound);
 	}
+
+	// Re-acquire focus simply to be safe
+	SetKeyboardFocus();
 }
 
 FReply URoboQuestLoadingWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
+	// If loading is finished, any key triggers the transition
 	if (bIsLoadingComplete)
 	{
 		ProceedToLevel();
 		return FReply::Handled();
 	}
+	
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
 FReply URoboQuestLoadingWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	// If loading is finished, mouse click proceeds too
 	if (bIsLoadingComplete)
 	{
 		ProceedToLevel();
@@ -86,11 +93,8 @@ FReply URoboQuestLoadingWidget::NativeOnMouseButtonDown(const FGeometry& InGeome
 
 void URoboQuestLoadingWidget::ProceedToLevel()
 {
-	// Stop BGM
-	if (BGMComponent)
-	{
-		BGMComponent->Stop();
-	}
+	if (bHasProceeded) return; // Prevent double calls
+	bHasProceeded = true;
 
 	// Notify GameInstance to actually switch levels
 	if (URoboQuestGameInstance* GI = Cast<URoboQuestGameInstance>(GetGameInstance()))
@@ -102,9 +106,52 @@ void URoboQuestLoadingWidget::ProceedToLevel()
 void URoboQuestLoadingWidget::NativeDestruct()
 {
 	Super::NativeDestruct();
-	if (BGMComponent)
+}
+
+void URoboQuestLoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	// Accumulate time for Sin wave
+	TotalTime += InDeltaTime;
+
+	// Far Background Move (Slow)
+	// Moves Left (-X) at 15 pixels/sec
+	if (FarBackgroundImage)
 	{
-		BGMComponent->Stop();
+		float FarSpeed = -80.0f;
+		FVector2D NewPos = FarBackgroundImage->GetRenderTransform().Translation;
+		NewPos.X += FarSpeed * InDeltaTime;
+
+		// Optional: Reset if it goes too far? (Depends on image size, usually just let it drift)
+		// if (NewPos.X < -1000.0f) NewPos.X = 0.0f; 
+
+		FarBackgroundImage->SetRenderTranslation(NewPos);
+	}
+
+	// Main Background Move (Faster Parallax)
+	// Moves Left (-X) at 40 pixels/sec
+	if (BackgroundImage)
+	{
+		float BgSpeed = -300.0f;
+		FVector2D NewPos = BackgroundImage->GetRenderTransform().Translation;
+		NewPos.X += BgSpeed * InDeltaTime;
+
+		BackgroundImage->SetRenderTranslation(NewPos);
+	}
+
+	// Bus Bobbing (Up/Down)
+	// Uses Sin wave physics: Amplitude * Sin(Time * Frequency)
+	if (BusImage)
+	{
+		float Amplitude = 10.0f; // Pixel offset range (up 10, down 10)
+		float Frequency = 1.0f;  // Speed of bobbing
+
+		float YOffset = FMath::Sin(TotalTime * Frequency) * Amplitude;
+
+		// We only modify Y, keep current X (if any)
+		FVector2D CurrentTrans = BusImage->GetRenderTransform().Translation;
+		BusImage->SetRenderTranslation(FVector2D(CurrentTrans.X, YOffset));
 	}
 }
 
