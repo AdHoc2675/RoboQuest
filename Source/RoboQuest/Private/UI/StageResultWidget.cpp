@@ -3,6 +3,7 @@
 #include "UI/StageResultWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 
 void UStageResultWidget::NativeConstruct()
@@ -27,11 +28,13 @@ void UStageResultWidget::NativeConstruct()
 
 void UStageResultWidget::SetupResultData(FName StageName, float PlayTime, int32 DefeatedEnemies, FString Rank)
 {
+	// 1. Set Stage Name
 	if (StageNameText)
 	{
 		StageNameText->SetText(FText::FromName(StageName));
 	}
 
+	// 2. Set Play Time
 	if (PlayTimeText)
 	{
 		// Format Time: MM:SS
@@ -41,31 +44,51 @@ void UStageResultWidget::SetupResultData(FName StageName, float PlayTime, int32 
 		PlayTimeText->SetText(FText::FromString(TimeStr));
 	}
 
-	if (RankText)
+	// 3. Set Rank (Image)
+	if (RankImage)
 	{
-		RankText->SetText(FText::FromString(Rank));
+		UTexture2D* TargetTexture = RankTextureDefault;
+
+		if (Rank == "S") TargetTexture = RankTextureS;
+		else if (Rank == "A") TargetTexture = RankTextureA;
+		else if (Rank == "B") TargetTexture = RankTextureB;
+		
+		if (TargetTexture)
+		{
+			RankImage->SetBrushFromTexture(TargetTexture);
+			RankImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			// Hide image if no texture found
+			RankImage->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 	
-	// Ideally, calculate Rank based on PlayTime and DefeatedEnemies logic here or pass it in.
+	// (Optional) Keep text update just in case, or hide it
+	if (RankText)
+	{
+		RankText->SetVisibility(ESlateVisibility::Hidden); // Hide text if we rely on image
+		// RankText->SetText(FText::FromString(Rank)); 
+	}
 }
 
 void UStageResultWidget::OnContinueClicked()
 {
-	// For now, just reload the current level or go to a Hub
-	// FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this));
-	// UGameplayStatics::OpenLevel(this, CurrentLevel);
-	
-	// Or close widget if it's just a summary
-	// RemoveFromParent();
-	
-	// Typically, move to next level:
+	// Logic to restart or go next
 	UE_LOG(LogTemp, Log, TEXT("StageResultWidget: Continue Clicked"));
+    
+    // Example: Restart Level
+    FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this));
+    UGameplayStatics::OpenLevel(this, CurrentLevel);
 }
 
 void UStageResultWidget::OnQuitClicked()
 {
-	// Return to Main Menu level
-	// UGameplayStatics::OpenLevel(this, TEXT("MainMenu"));
+	// Logic to return to menu
 	UE_LOG(LogTemp, Log, TEXT("StageResultWidget: Quit Clicked"));
+    
+    // Example: Open Main Menu
+    // UGameplayStatics::OpenLevel(this, TEXT("MainMenu"));
 }
 

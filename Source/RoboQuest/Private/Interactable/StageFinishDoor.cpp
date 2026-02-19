@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/AudioComponent.h"
+#include "Sound/AmbientSound.h"
 #include "TimerManager.h"
 
 AStageFinishDoor::AStageFinishDoor()
@@ -60,7 +61,39 @@ void AStageFinishDoor::StartFinishSequence(AController* PlayerController)
 
 	// 3. Audio Fade Out
 
-	// UGameplayStatics::PushSoundMixModifier(this, FadeOutMix); 
+	TArray<AActor*> AmbientSounds;
+	UGameplayStatics::GetAllActorsOfClass(this, AAmbientSound::StaticClass(), AmbientSounds);
+
+	bool bFound = false;
+	for (AActor* Actor : AmbientSounds)
+	{
+		// Check for the specific Tag
+		if (Actor->ActorHasTag(CombatMusicTag))
+		{
+			if (AAmbientSound* Amb = Cast<AAmbientSound>(Actor))
+			{
+				if (UAudioComponent* Audio = Amb->GetAudioComponent())
+				{
+					// If it was silent or stopped, start/fade it in
+					if (!Audio->IsPlaying())
+					{
+						Audio->Play();
+					}
+
+					// Fade In (Target Volume 1.0)
+					Audio->FadeOut(FadeOutDuration, 0.0f);
+					bFound = true;
+
+					UE_LOG(LogTemp, Log, TEXT("StageFinishDoor::Triggered Combat Music Fade In!"));
+				}
+			}
+		}
+	}
+
+	if (!bFound)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StageFinishDoor::Could not find AmbientSound with tag '%s'"), *CombatMusicTag.ToString());
+	}
 
 	UE_LOG(LogTemp, Log, TEXT("StageFinishDoor: Sequence Started..."));
 
