@@ -163,7 +163,6 @@ void URoboQuestLoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 
 		float YOffset = FMath::Sin(TotalTime * Frequency) * Amplitude;
 
-		// We only modify Y, keep current X (if any)
 		FVector2D CurrentTrans = BusImage->GetRenderTransform().Translation;
 		BusImage->SetRenderTranslation(FVector2D(CurrentTrans.X, YOffset));
 	}

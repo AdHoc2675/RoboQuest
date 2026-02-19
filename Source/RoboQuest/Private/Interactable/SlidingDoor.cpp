@@ -3,6 +3,8 @@
 #include "Interactable/SlidingDoor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/AmbientSound.h"
+#include "Components/AudioComponent.h"
 
 ASlidingDoor::ASlidingDoor()
 {
@@ -59,12 +61,58 @@ void ASlidingDoor::Interact_Implementation(AActor* Interactor)
 {
     if (bIsLocked)
     {
-        // Optional: Play locked sound or message
         return;
     }
 
     // Toggle State
     SetDoorState(!bIsOpen);
+
+    // [New Logic] Trigger Music if opening
+    if (bIsOpen && bTriggersCombatMusic)
+    {
+        TriggerMusic();
+        
+        // Disable trigger so it doesn't restart music every time
+        // bTriggersCombatMusic = false; 
+    }
+}
+
+void ASlidingDoor::TriggerMusic()
+{
+    // Find all AmbientSound actors
+    TArray<AActor*> AmbientSounds;
+    UGameplayStatics::GetAllActorsOfClass(this, AAmbientSound::StaticClass(), AmbientSounds);
+
+    bool bFound = false;
+    for (AActor* Actor : AmbientSounds)
+    {
+        // Check for the specific Tag
+        if (Actor->ActorHasTag(CombatMusicTag))
+        {
+            if (AAmbientSound* Amb = Cast<AAmbientSound>(Actor))
+            {
+                if (UAudioComponent* Audio = Amb->GetAudioComponent())
+                {
+                    // If it was silent or stopped, start/fade it in
+                    if (!Audio->IsPlaying())
+                    {
+                        Audio->Play();
+                    }
+                    
+                    // Fade In (Target Volume 1.0)
+                    Audio->FadeIn(FadeInDuration, 1.0f);
+                    bFound = true;
+                    
+                    UE_LOG(LogTemp, Log, TEXT("SlidingDoor::Triggered Combat Music Fade In!"));
+                }
+            }
+        }
+    }
+
+    if (!bFound)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SlidingDoor::Could not find AmbientSound with tag '%s'"), *CombatMusicTag.ToString());
+    }
 }
 
 FText ASlidingDoor::GetInteractionPrompt_Implementation()

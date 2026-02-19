@@ -73,7 +73,24 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Door")
     void SetDoorState(bool bOpen);
 
+    // --- Audio Triggers ---
+
+    // If true, interacting (opening) this door will trigger the combat BGM to fade in.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Setup")
+    bool bTriggersCombatMusic = false;
+
+    // The tag to search for in AmbientSound actors (Default: "CombatBGM")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Setup")
+    FName CombatMusicTag = TEXT("CombatBGM");
+
+    // Fade in duration
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Setup")
+    float FadeInDuration = 2.0f;
+
 private:
+    // Helper to find and play music
+    void TriggerMusic();
+
     bool bIsOpen;
 
     // Stores the initial location of the mesh (Closed state)
