@@ -9,7 +9,8 @@
 class UTextBlock;
 class UImage;
 class UButton;
-class UTexture2D; // Forward declaration
+class UTexture2D;
+class UAudioComponent;
 
 /**
  * UStageResultWidget: Handles the display of stage completion statistics.
@@ -72,6 +73,17 @@ protected:
 	// Fade-in animation for the widget content
 	UPROPERTY(Transient, meta = (BindWidgetAnimOptional))
 	UWidgetAnimation* IntroAnim;
+
+	// --- Audio Settings ---
+
+	// Background music to play when this screen is shown
+	UPROPERTY(EditDefaultsOnly, Category = "Stage Result|Audio")
+	USoundBase* ResultBGM;
+
+	// --- Internal State ---
+
+	UPROPERTY()
+	UAudioComponent* BGMComponent;
 
 	// --- Event Handlers ---
 

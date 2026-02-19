@@ -4,7 +4,9 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Components/AudioComponent.h" 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void UStageResultWidget::NativeConstruct()
 {
@@ -23,6 +25,12 @@ void UStageResultWidget::NativeConstruct()
 	if (IntroAnim)
 	{
 		PlayAnimation(IntroAnim);
+	}
+
+	// Play BGM
+	if (ResultBGM)
+	{
+		BGMComponent = UGameplayStatics::SpawnSound2D(this, ResultBGM);
 	}
 }
 
@@ -75,20 +83,33 @@ void UStageResultWidget::SetupResultData(FName StageName, float PlayTime, int32 
 
 void UStageResultWidget::OnContinueClicked()
 {
-	// Logic to restart or go next
+	// Stop BGM immediately or fade out
+	if (BGMComponent)
+	{
+		BGMComponent->Stop();
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("StageResultWidget: Continue Clicked"));
-    
-    // Example: Restart Level
-    FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this));
-    UGameplayStatics::OpenLevel(this, CurrentLevel);
+	
+	FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this));
+	UGameplayStatics::OpenLevel(this, CurrentLevel);
 }
 
 void UStageResultWidget::OnQuitClicked()
 {
-	// Logic to return to menu
+	if (BGMComponent)
+	{
+		BGMComponent->Stop();
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("StageResultWidget: Quit Clicked"));
-    
-    // Example: Open Main Menu
-    // UGameplayStatics::OpenLevel(this, TEXT("MainMenu"));
+
+	APlayerController* PC = GetOwningPlayer();
+	if (!PC)
+	{
+		PC = UGameplayStatics::GetPlayerController(this, 0);
+	}
+
+	UKismetSystemLibrary::QuitGame(this, PC, EQuitPreference::Quit, false);
 }
 
