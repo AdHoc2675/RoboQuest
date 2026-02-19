@@ -112,19 +112,41 @@ void ASmallPod::FireProjectile()
 {
 	if (!ProjectileClass) return;
 
+	// 1. Determine Spawn Location (Muzzle)
 	FVector SpawnLoc = GetActorLocation();
 	
-	// Use the Actor's rotation (guaranteed to face the target by EnemyPodBase)
-	FRotator SpawnRot = GetActorRotation(); 
-
 	if (GetMesh() && GetMesh()->DoesSocketExist(MuzzleSocketName))
 	{
-		SpawnLoc = GetMesh()->GetSocketLocation(MuzzleSocketName) + GetActorForwardVector() * 30.0f;
+		// Use the socket location if it exists
+		SpawnLoc = GetMesh()->GetSocketLocation(MuzzleSocketName);
 	}
 	else
 	{
+		// Fallback
 		SpawnLoc += GetActorForwardVector() * 30.0f;
 	}
+
+	// 2. Determine Spawn Rotation (Aim at Target)
+	FRotator SpawnRot = GetActorRotation(); // Default to facing direction
+
+	if (HasValidTarget() && CurrentTarget)
+	{
+		// Calculate vector from Muzzle to Target
+		FVector TargetLoc = CurrentTarget->GetActorLocation();
+		
+		// Optional: Aim slightly at the center of the target (e.g., chest height)
+		// TargetLoc.Z += 40.0f; 
+
+		FVector DirectionToTarget = TargetLoc - SpawnLoc;
+		
+		// Create rotation from direction vector
+		SpawnRot = DirectionToTarget.Rotation();
+	}
+    else
+    {
+        // If no target, just fire forward (based on actor rotation)
+        SpawnRot = GetActorRotation();
+    }
 
 	FActorSpawnParameters ActorSpawnParams;
 	ActorSpawnParams.Owner = this;

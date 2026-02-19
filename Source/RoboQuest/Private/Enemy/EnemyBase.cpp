@@ -8,6 +8,7 @@
 #include "UI/DamageTextWidget.h"
 #include "Engine/DamageEvents.h"
 #include "Data/ElementalDamageTypes.h"
+#include "Kismet/GameplayStatics.h" // For PlaySound
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -40,6 +41,12 @@ float AEnemyBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent
         
 		if (ActualDamage > 0.0f)
 		{
+            // Play Hit Sound
+            if (HitSound)
+            {
+                UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+            }
+
 			// bool bIsCritical = (ActualDamage > 20.0f); 
             bool bIsCritical = false;
             // Determine Color based on Damage Type
@@ -81,7 +88,14 @@ void AEnemyBase::OnHealthChanged(float CurrentHealth, float ScratchHealth, float
     {
         Die();
     }
+}
 
+void AEnemyBase::PlayShootSound()
+{
+    if (ShootSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ShootSound, GetActorLocation());
+    }
 }
 
 void AEnemyBase::Die()
@@ -89,6 +103,12 @@ void AEnemyBase::Die()
     if (bIsDead) return;
     
     bIsDead = true;
+
+    // Play Death Sound
+    if (DeathSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
+    }
 
     SpawnDrops();
 
@@ -118,14 +138,17 @@ void AEnemyBase::Die()
     // Detach controller
     DetachFromControllerPendingDestroy();
 
+    if (OnEnemyDied.IsBound())
+    {
+        OnEnemyDied.Broadcast(this);
+    }
+
     // Destroy actor after a delay (set LifeSpan)
     SetLifeSpan(5.0f); 
 }
 
 void AEnemyBase::SpawnDrops()
 {
-    if (!HealingCellClass || !PowerCellClass) return;
-
     // Healing Cells (Guaranteed drop based on Count)
     if (HealingCellClass)
     {

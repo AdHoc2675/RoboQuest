@@ -24,7 +24,7 @@ public:
 	// --- Config ---
 	// Range within which the enemy detects the player
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	float DetectRange = 1500.0f;
+	float DetectRange = 2000.0f;
 
 	// Speed of rotation towards the target
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")

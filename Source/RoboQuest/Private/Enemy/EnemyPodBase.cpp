@@ -47,7 +47,7 @@ void AEnemyPodBase::FindTarget()
 		else
 		{
 			CurrentTarget = nullptr;
-		}
+		}	
 	}
 }
 
@@ -57,6 +57,10 @@ void AEnemyPodBase::RotateTowardsTarget(float DeltaTime)
 
 	// Calculate the rotation needed to look at the target
 	FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CurrentTarget->GetActorLocation());
+
+	// Lock Pitch and Roll to 0 to rotate only on Yaw (Z-axis)
+	LookAtRot.Pitch = 0.0f;
+	LookAtRot.Roll = 0.0f;
     
     // Smoothly interpolate current rotation to target rotation
 	FRotator NewRot = FMath::RInterpTo(GetActorRotation(), LookAtRot, DeltaTime, RotationSpeed);
@@ -87,7 +91,7 @@ bool AEnemyPodBase::CanSeeTarget() const
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
 	// Debug line
-	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false);
+	// DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false);
 
 	// If bHit is true, it means there is an obstacle (Wall) -> Not visible
 	// If bHit is false, the trace went through -> Visible

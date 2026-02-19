@@ -3,11 +3,12 @@
 #include "Enemy/CombatZone.h"
 #include "Components/BoxComponent.h"
 #include "RoboQuest/RoboQuestCharacter.h"
+#include "Interactable/SlidingDoor.h"
 
 // Sets default values
 ACombatZone::ACombatZone()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.
 	PrimaryActorTick.bCanEverTick = false;
 
 	bIsActive = false;
@@ -33,7 +34,6 @@ void ACombatZone::BeginPlay()
 
 void ACombatZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// Check if triggered by player and not already active
 	if (!bIsActive && OtherActor && OtherActor->IsA(ARoboQuestCharacter::StaticClass()))
 	{
 		ActivateZone();
@@ -42,24 +42,63 @@ void ACombatZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 
 void ACombatZone::ActivateZone()
 {
+	if (bIsCompleted) return;
+
 	bIsActive = true;
+	AliveEnemyCount = 0;
+
+	// Lock all linked Sliding Doors
+	for (ASlidingDoor* Door : LinkedDoors)
+	{
+		if (Door) Door->SetLocked(true);
+	}
 
 	// Iterate through all linked spawn points and spawn enemies
 	for (AEnemySpawnPoint* Point : SpawnPoints)
 	{
 		if (IsValid(Point))
 		{
-			Point->SpawnEnemy();
-
-			// Optional: Destroy the spawn point actor to clean up memory,
-			// since it's just a marker.
-			// Point->Destroy();
+			AEnemyBase* SpawnedEnemy = Point->SpawnEnemy();
+			if (SpawnedEnemy)
+			{
+				AliveEnemyCount++;
+				SpawnedEnemy->OnEnemyDied.AddDynamic(this, &ACombatZone::OnEnemyKilled);
+			}
 		}
 	}
 
-	// Additional Logic:
-	// - Lock doors
-	// - Start background music
-	// - Notify GameMode
+    // Immediate complete if no enemies spawned
+	if (AliveEnemyCount == 0)
+	{
+		CompleteZone();
+	}
 }
 
+void ACombatZone::OnEnemyKilled(AEnemyBase* DeadEnemy)
+{
+	AliveEnemyCount--;
+
+	if (AliveEnemyCount <= 0)
+	{
+		CompleteZone();
+	}
+}
+
+void ACombatZone::CompleteZone()
+{
+	bIsActive = false;
+	bIsCompleted = true;
+
+	// Unlock all linked Sliding Doors
+	for (ASlidingDoor* Door : LinkedDoors)
+	{
+		if (Door) Door->SetLocked(false);
+	}
+	// Open specific Sliding Doors if any
+	for (ASlidingDoor* Door : DoorsToOpenOnComplete)
+	{
+		if (Door) Door->SetDoorState(true);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Combat Zone Cleared!"));
+}

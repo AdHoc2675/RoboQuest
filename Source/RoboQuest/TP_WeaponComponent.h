@@ -8,6 +8,7 @@
 #include "TP_WeaponComponent.generated.h"
 
 class ARoboQuestCharacter;
+class UNiagaraSystem;
 
 // Delegate to notify when ammo changes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, CurrentAmmo, int32, MaxAmmo);
@@ -21,6 +22,10 @@ public:
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category=Projectile)
 	TSubclassOf<class ARoboQuestProjectile> ProjectileClass;
+
+	/** Niagara System for Muzzle Flash */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Effects")
+	UNiagaraSystem* MuzzleFlashFX;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
